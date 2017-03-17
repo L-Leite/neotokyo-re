@@ -1,0 +1,30 @@
+//-----------------------------------------------------------------------------
+//	game_shader_dx9.vpc
+//
+//	Project Script for mods to use an an example of how to override shaders
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME "neotokyo"
+$Include "$SRCDIR\materialsystem\stdshaders\game_shader_dx9_base.vpc"
+
+$Project "Shaders (NEOTOKYO)"
+{
+	$Folder	"Source Files"
+	{
+		$File	"neo_camfx_blur.cpp"
+		$File	"neo_camfx_brightpass.cpp"
+		$File	"neo_camfx_camera.cpp"
+		$File	"neo_gaussx.cpp"
+		$File	"neo_gaussy.cpp"
+		$File	"neo_nightvision_brightpass.cpp"
+		$File	"NEO_PPTest.cpp"
+		$File	"neotokyo_motionvision.cpp"
+		$File	"neotokyo_motionvision_modelshader.cpp"
+		$File	"neotokyo_nightvision_nv.cpp"
+		$File	"neotokyo_thermalvision_modelshader.cpp"
+		$File	"neotokyo_thermalvision_noiseblur.cpp"
+		$File	"neotokyo_thermalvision_tpass.cpp"
+		$File	"neotokyo_thermalvision_tv.cpp"
+	}
+}

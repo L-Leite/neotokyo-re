@@ -1,0 +1,101 @@
+//-----------------------------------------------------------------------------
+//	SERVER_NEOTOKYO.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME 	"neotokyo"
+
+$Include "$SRCDIR\game\server\server_base.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories		"$BASE;$SRCDIR\game\shared\neotokyo,.\neotokyo"
+		$PreprocessorDefinitions			"$BASE;NEO_DLL"
+	}
+}
+
+$Project "Server (NEOTOKYO)"
+{
+	$Folder	"Source Files"
+	{
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.cpp"
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.h"
+		$File	"$SRCDIR\game\shared\teamplayroundbased_gamerules.cpp"
+		$File	"$SRCDIR\game\shared\teamplayroundbased_gamerules.h"
+	
+		$Folder	"Neotokyo DLL"
+		{
+			$File	"neotokyo\neo_bot_temp.cpp"
+			$File	"neotokyo\neo_bot_temp.h"
+			$File	"neotokyo\neo_brushentity.cpp"
+			$File	"neotokyo\neo_client.cpp"
+			$File	"neotokyo\neo_env_message.cpp"
+			$File	"neotokyo\neo_env_sparkler.cpp"
+			$File	"neotokyo\neo_eventlog.cpp"
+			$File	"neotokyo\neo_gameinterface.cpp"
+			$File	"neotokyo\neo_ghost_spawnpoint.cpp"
+			$File	"neotokyo\neo_ghost_spawnpoint.h"			
+			$File	"neotokyo\neo_logicalentity.cpp"
+			$File	"neotokyo\neo_modelentity.cpp"
+			$File	"neotokyo\neo_player.cpp"
+			$File	"neotokyo\neo_player.h"
+			$File	"neotokyo\neo_playermove.cpp"
+			$File	"neotokyo\neo_spawnpoint.cpp"
+			$File	"neotokyo\neo_spawnpoint.h"
+			$File	"neotokyo\neo_team.cpp"
+			$File	"neotokyo\neo_team.h"
+			$File	"neotokyo\neo_vehicle_jeep.cpp"
+			$File	"neotokyo\neo_vguiscreen.cpp"
+			$File	"neotokyo\neo_vguiscreen.h"
+			$File	"neotokyo\te_firebullets.cpp"
+			$File	"neotokyo\te_firebullets.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_basegrenade_projectile.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_basegrenade_projectile.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_bloomcontroller.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_bloomcontroller.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_controlpoint.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_controlpoint.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_dataaccesspoint.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_dataaccesspoint.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_escapepoint.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_escapepoint.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_fx_shared.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_fx_shared.h"			
+			$File	"$SRCDIR\game\shared\neotokyo\neo_game_config.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_game_config.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_gamemovement.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_gamerules.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_gamerules.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_ghost_retrievalpoint.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_ghost_retrievalpoint.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_player_shared.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_player_shared.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_playeranimstate.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_playeranimstate.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_playerclass_info.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_playerclass_info.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_shareddefs.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_shareddefs.h"			
+			$File	"$SRCDIR\game\shared\neotokyo\neo_usermessages.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_viewmodel.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_viewmodel.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_weapon_melee.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_weapon_melee.h"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_weapon_parse.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\neo_weapon_parse.h"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_baseneogrenade.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_baseneogrenade.h"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_ghost.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_ghost.h"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_neobase.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_neobase.h"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_neobasefirearm.cpp"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_neobasefirearm.h"
+			$File	"$SRCDIR\game\shared\neotokyo\weapon_milso.cpp"
+		}
+	}
+}
