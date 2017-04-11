@@ -42,6 +42,7 @@
 #define IN_THERMOPTIC	(1 << 27)
 #define IN_VISION		(1 << 28)
 #define IN_TOSS			(1 << 29)
+#define IN_MELEE		(1 << 30)
 #else
 #define IN_GRENADE1		(1 << 23)	// grenade 1
 #define IN_GRENADE2		(1 << 24)	// grenade 2

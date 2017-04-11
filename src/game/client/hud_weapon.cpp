@@ -11,7 +11,11 @@
 #include <vgui_controls/Controls.h>
 #include <vgui/ISurface.h>
 #include <vgui_controls/Panel.h>
+#ifdef NEO_DLL
+#include "neo_hud_crosshair.h"
+#else
 #include "hud_crosshair.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -84,6 +88,7 @@ void CHudWeapon::PerformLayout()
 //-----------------------------------------------------------------------------
 void CHudWeapon::Paint( void )
 {
+#ifndef NEO_DLL
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 
 	if ( !player )
@@ -104,4 +109,5 @@ void CHudWeapon::Paint( void )
 			m_pCrosshair->ResetCrosshair();
 		}
 	}
+#endif
 }

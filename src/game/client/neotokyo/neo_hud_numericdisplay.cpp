@@ -65,7 +65,7 @@ void CNHudNumericDisplay::Paint()
 void CNHudNumericDisplay::DrawNumber( HFont hFont, int x, int y, int number )
 {
 	wchar_t buffer[ 10 ];
-	V_snwprintf( buffer, sizeof( buffer ), L"%d", number );
+	V_snwprintf( buffer, ARRAYSIZE( buffer ), L"%d", number );
 
 	int charWidth = surface()->GetCharacterWidth( hFont, 48 );
 

@@ -375,6 +375,10 @@ bool CNEOGameMovement::CheckJumpButton( void )
 		vecForward *= mv->m_flForwardMove;
 
 		VectorAdd( vecForward, mv->m_vecVelocity, mv->m_vecVelocity );
+
+#ifdef GAME_DLL
+		neoPlayer->OnReconSuperJump();
+#endif
 	}
 
 	FinishGravity();
@@ -393,6 +397,10 @@ bool CNEOGameMovement::CheckJumpButton( void )
 
 	// Flag that we jumped.
 	mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
+
+	if ( !bIsRecon )
+		neoPlayer->SetUnknown4380( 40.0f );
+
 	return true;
 }
 

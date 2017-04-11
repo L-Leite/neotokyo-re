@@ -99,7 +99,7 @@ void CNEOWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	V_strncpy( m_szTeam2ViewModel, pTeam2vm, sizeof( m_szTeam2ViewModel ) );
 
 	const wchar_t* pBulletChar = pKeyValuesData->GetWString( "BulletCharacter", L"" );
-	V_wcsncpy( m_szBulletCharacter, pBulletChar, sizeof( m_szBulletCharacter ) );
+	m_szBulletCharacter[ 0 ] = pBulletChar[ 0 ];
 
 	m_bDrawCrosshair = (pKeyValuesData->GetInt( "DrawCrosshair", true ) != 0) ? true : false;		 
 	m_iAimType = pKeyValuesData->GetInt( "AimType", 1 );

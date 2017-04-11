@@ -52,6 +52,10 @@ bool CWeaponNeoBaseFirearm::Deploy()
 
 	pPlayer->m_iShotsFired = 0;
 	bAimed = false;
+#ifdef CLIENT_DLL
+	m_Unknown1892 = 0;
+	m_Unknown1904 = 0;
+#endif
 
 	return BaseClass::Deploy();
 }
@@ -65,12 +69,14 @@ bool CWeaponNeoBaseFirearm::ReloadOrSwitchWeapons()
 
 	m_bFireOnEmpty = false;
 
-	if ( (HasAnyAmmo() || gpGlobals->curtime <= m_flNextPrimaryAttack || gpGlobals->curtime <= m_flNextSecondaryAttack)
+	if ( (HasAnyAmmo() || m_flNextPrimaryAttack < gpGlobals->curtime || m_flNextSecondaryAttack < gpGlobals->curtime)
 		&& UsesClipsForAmmo1()
-		&& !m_bFiresUnderwater
-		&& ( gpGlobals->curtime - 0.2f ) > m_flNextPrimaryAttack
-		&& Reload() )
-		return true;
+		&& m_iClip1 == 0
+		&& (gpGlobals->curtime - 0.2f) > m_flNextPrimaryAttack )
+	{
+		if ( Reload() )
+			return true;
+	}
 
 	return false;
 }
@@ -80,7 +86,7 @@ void CWeaponNeoBaseFirearm::ItemPostFrame()
 	CNEOPlayer* pPlayer = GetPlayerOwner();
 
 	if ( !pPlayer )
-		return;
+		return BaseClass::ItemPostFrame();
 
 	m_bIsSprinting = pPlayer->m_iSprint == 1 || pPlayer->IsOnLadder();
 
@@ -92,10 +98,10 @@ void CWeaponNeoBaseFirearm::ItemPostFrame()
 	float fVelocity = pPlayer->GetAbsVelocity().Length2D();
 
 	if ( fVelocity > 5.0f && !bAimed )
-		m_fAccuracy *= 2;
+		m_fAccuracy = timeSinceLastPostFrame + timeSinceLastPostFrame;
 
 	if ( pPlayer->GetFlags() & FL_DUCKING )
-		m_fAccuracy	/= 2;
+		m_fAccuracy	= timeSinceLastPostFrame;
 
 	m_fAccuracy *= 1.2f;
 
@@ -118,39 +124,100 @@ void CWeaponNeoBaseFirearm::ItemPostFrame()
 
 	if ( !m_bIsReadyToFire )
 	{
-		if ( pPlayer->m_afButtonReleased & IN_ATTACK )
+		if ( pPlayer->m_afButtonReleased & IN_ATTACK )	   
 			pPlayer->m_iShotsFired = 0;
 
-		if ( !( pPlayer->m_nButtons, IN_ATTACK ) )
+		else if ( !( pPlayer->m_nButtons & IN_ATTACK ) )
 			m_flNextPrimaryAttack = gpGlobals->curtime - 0.1f;
 
-		if ( (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && m_iClip1 > 0 )
-			PrimaryAttack();
+		else if ( (gpGlobals->curtime > m_flNextPrimaryAttack) && m_iClip1 <= 0 )
+			NEOPlayEmptySound();
+
+		return BaseClass::ItemPostFrame();
 	}	
 	else
 	{
 		m_bIsReadyToFire = false;
-		SendWeaponAnim( ACT_VM_IDLE_TO_LOWERED );	 
+		SendWeaponAnim( ACT_VM_IDLE_TO_LOWERED );
 		SetWeaponIdleTime( gpGlobals->curtime + 0.25 );
 
-		if ( gpGlobals->curtime > m_flNextPrimaryAttack )
+		if ( gpGlobals->curtime >= m_flNextPrimaryAttack )
 			m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime + 0.25;
 		else
 			m_flNextSecondaryAttack = m_flNextPrimaryAttack = 0.25;
+	}	   		   	
+}
+
+bool CWeaponNeoBaseFirearm::NEOBaseGunFire( float flCycleTime )
+{
+	if ( m_flNextPrimaryAttack > gpGlobals->curtime
+		|| m_flNextSecondaryAttack > gpGlobals->curtime )
+		return false;
+
+	CNEOPlayer* pPlayer = GetPlayerOwner();
+
+	if ( !pPlayer || pPlayer->m_iSprint || pPlayer->IsOnLadder() )
+		return false;
+
+	if ( bAimed )
+		m_fAccuracy *= 0.26f + 0.35f;
+
+	pPlayer->m_iShotsFired++;
+
+	if ( m_iFireMode == 0 && pPlayer->m_iShotsFired > 1 )
+		return false;
+
+	// Out of ammo?
+	if ( m_iClip1 <= 0 )
+	{
+		if ( ShouldPlayEmptySound() )
+		{
+			NEOPlayEmptySound();
+			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
+		}
+
+		return false;
 	}
 
-	if ( (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime)  )
-	{
-		PrimaryAttack();
-	}
-	else if ( (pPlayer->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) )
-	{
-		SecondaryAttack();
-	}
-	else
-	{
-		WeaponIdle();
-	}
+#ifdef GAME_DLL
+	pPlayer->BodyPartHit( HITGROUP_GENERIC );
+#endif
+
+	SendWeaponAnim( m_iClip1 <= 0 ? ACT_VM_DRYFIRE : ACT_VM_PRIMARYATTACK );
+
+	m_iClip1--;
+
+	// player "shoot" animation
+	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+
+	FX_FireBullets(
+		pPlayer->entindex(),
+		pPlayer->Weapon_ShootPosition(),
+		pPlayer->EyeAngles() + pPlayer->GetPunchAngle(),
+		GetWeaponID(),
+		Primary_Mode,
+		CBaseEntity::GetPredictionRandomSeed() & 255,
+		m_fAccuracy );
+
+#ifdef CLIENT_DLL
+	DoNEOMuzzleFlash();
+#endif
+
+	m_fAccuracy = 0.8f;
+
+	if ( m_fOldAccuracy < m_fAccuracy )
+		m_fAccuracy = m_fOldAccuracy;
+
+	if ( pPlayer )
+		pPlayer->FixViewPunch( 0 );
+
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flCycleTime;
+
+	SetWeaponIdleTime( gpGlobals->curtime + 2.0 );
+
+	AddViewKick();
+
+	return true;
 }
 
 void CWeaponNeoBaseFirearm::WeaponIdle()
@@ -171,7 +238,7 @@ void CWeaponNeoBaseFirearm::WeaponIdle()
 	else				
 	{
 		SetWeaponIdleTime( gpGlobals->curtime + 0.4f );
-		SendWeaponAnim( ACT_VM_IDLE_DEPLOYED_EMPTY );
+		SendWeaponAnim( ACT_VM_IDLE_EMPTY ); // Or ACT_VM_IDLE_DEPLOYED_EMPTY?
 
 		if ( m_bShouldReload )
 			Reload();
@@ -190,16 +257,16 @@ void CWeaponNeoBaseFirearm::FinishReload()
 	// If I use primary clips, reload primary
 	if ( UsesClipsForAmmo1() )
 	{
-		int primary = MIN( GetMaxClip1() - m_iClip1, pOwner->GetAmmoCount( m_iPrimaryAmmoType ) );
-		m_iClip1 += primary;
+		int primary = MIN( GetMaxClip1(), pOwner->GetAmmoCount( m_iPrimaryAmmoType ) );
+		m_iClip1 = primary;
 		pOwner->RemoveAmmo( primary, m_iPrimaryAmmoType );
 	}
 
 	// If I use secondary clips, reload secondary
 	if ( UsesClipsForAmmo2() )
 	{
-		int secondary = MIN( GetMaxClip2() - m_iClip2, pOwner->GetAmmoCount( m_iSecondaryAmmoType ) );
-		m_iClip2 += secondary;
+		int secondary = MIN( GetMaxClip2(), pOwner->GetAmmoCount( m_iSecondaryAmmoType ) );
+		m_iClip2 = secondary;
 		pOwner->RemoveAmmo( secondary, m_iSecondaryAmmoType );
 	}
 
@@ -215,7 +282,7 @@ bool CWeaponNeoBaseFirearm::Reload()
 {	
 	CNEOPlayer* pOwner = GetPlayerOwner();
 
-	if ( !pOwner || !pOwner->IsPlayer() || pOwner->IsOnLadder() )
+	if ( !pOwner || pOwner->m_iSprint == 1 || pOwner->IsOnLadder() )
 		return false;
 
 	if ( pOwner->GetAmmoCount( GetPrimaryAmmoType() ) <= 0 )
@@ -251,14 +318,23 @@ void CWeaponNeoBaseFirearm::SecondaryAttack()
 {
 	CNEOPlayer* pOwner = GetPlayerOwner();
 
-	if ( !pOwner || !pOwner->IsPlayer() )
+	if ( !pOwner  )
+		return;
+
+	if ( m_Unknown1488 <= 1 || m_bIsSprinting )		  
 		return;
 
 	if ( m_flNextSecondaryAttack > gpGlobals->curtime )
 		return;
 
-	m_flNextSecondaryAttack = gpGlobals->curtime + 0.65f;
-	m_flTimeWeaponIdle = m_flNextSecondaryAttack;
+	m_iFireMode = 0;
+
+	if ( m_iFireMode >= m_Unknown1488 )
+		m_iFireMode = 0;
+
+	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + 0.65f;
 }
 
 void CWeaponNeoBaseFirearm::NEOPlayEmptySound()

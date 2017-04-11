@@ -14,14 +14,12 @@ Don't forget to grab the original game files
 Tested only on Windows but it **should** build on every other platforms that Source supports.
 
 ## Current issues
-- HUD isn't complete
+- Some HUD elements are broken
 - Original game shaders aren't compatible with our code
 - Thermal and motion materials don't work because of the shaders
-- Sprinting is kinda **working***
 - Spectating will crash the game
 - Bots join TEAM_UNASSIGNED
-- You spawn in the world when in STATE_PICKING* states
-- FireBullet doesn't play shooting effects properly (will probably borrow the code from CSS since it has penetration already)
+- Kill notices don't display the correct death icons
 
 I'm sure there's other stuff going on so watch out for any witchcraft
 

@@ -59,11 +59,11 @@ public:
 #ifdef CLIENT_DLL
 	virtual bool ShouldPredict();
 
-	virtual int InternalDrawModel( int flags );
+	//virtual int InternalDrawModel( int flags );
 #endif
 
 	// All predicted weapons need to implement and return true
-	//virtual bool	IsPredicted() const { return true; }
+	virtual bool	IsPredicted() const { return true; }
 	virtual NEOWeaponID GetWeaponID( void ) const { return WEAPON_NONE; }
 	
 	virtual void	SetViewModel();
@@ -76,6 +76,8 @@ public:
 	// Get a pointer to the player that owns this weapon
 	CNEOPlayer* GetPlayerOwner() const;
 
+	virtual bool HasAmmoClip() { return true; }
+
 	// override to play custom empty sounds
 	virtual bool PlayEmptySound();
 
@@ -85,9 +87,13 @@ public:
 
 	virtual float	GetFireRate() { return 1.0f; }
 
+#ifdef CLIENT_DLL
+	virtual void	UpdateShouldDrawViewmodel();
+	virtual void	SetShouldDrawViewmodel();
+	virtual void	OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles );
+#endif
 	virtual void	AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles );
 	virtual	float	CalcViewmodelBob();
-	virtual void	OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles );
 
 	virtual const char*	GetWeaponTypeName() { return "primary"; }
 
@@ -114,6 +120,7 @@ public:
 	virtual float	GetAimingFov() { return 50.f; }
 
 	bool			CanClassUseThis( int iClassType );
+	int				GetOwnerTeamNumber();
 
 	int				GetAimType() const { return m_iAimType; }
 
@@ -132,9 +139,21 @@ protected:
 	bool		m_bDrawCrosshair;
 
 public:
-	CNetworkVar( bool, bAimed );
+	CNetworkVar( bool, bAimed );		
 
-	int			m_Unknown1892; // 1892 in client, idk where it is on the server
+#ifdef CLIENT_DLL
+public:
+	// Prob not in the server since it's viewmodel related
+	int			m_Unknown1892;
+
+	protected:
+	float		m_Unknown1896;
+	float		m_Unknown1904;
+
+	int			m_Unknown1912;
+	float		m_Unknown1928;
+	float		m_Unknown1932;
+#endif
 
 private:
 	int			m_iAimType;
@@ -181,9 +200,6 @@ protected:
 
 	bool m_Unknown1472;
 	int m_Unknown1476;
-
-	int			m_iUnknown;
-	float		m_fUnknown2;
 
 private:
 	CWeaponNEOBase( const CWeaponNEOBase & );

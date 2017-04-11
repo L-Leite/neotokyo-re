@@ -49,8 +49,7 @@ void FinishClientPutInServer( CNEOPlayer *pPlayer )
 		// When the player first joins the server, they
 		pPlayer->m_takedamage = DAMAGE_YES;
 		pPlayer->pl.deadflag = false;
-		pPlayer->m_lifeState = LIFE_ALIVE;
-		pPlayer->RemoveEffects( EF_NODRAW );
+		pPlayer->m_lifeState = LIFE_RESPAWNABLE;
 		pPlayer->ChangeTeam( TEAM_UNASSIGNED );
 		pPlayer->SetThink( NULL );
 	}
@@ -107,7 +106,7 @@ const char *GetGameDescription()
 	if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 		return g_pGameRules->GetGameDescription();
 	else
-		return "CounterStrike";
+		return "Neotokyo";
 }
 
 
@@ -160,6 +159,12 @@ void GameStartFrame( void )
 		return;
 
 	gpGlobals->teamplay = teamplay.GetInt() ? true : false;
+
+	// There's some CNEOBot stuff here
+	/*for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CNEOPlayer* pPlayer = (CNEOPlayer*) UTIL_PlayerByIndex( i );
+	}*/
 }
 
 //=========================================================

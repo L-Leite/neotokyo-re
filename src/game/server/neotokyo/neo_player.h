@@ -119,6 +119,7 @@ public:
 	void FreeWeaponSlot();	  
 
 	void ResetMaxSpeed();
+	void OnReconSuperJump();
 
 	bool HandleCommand_JoinTeam( int iTeam );
 	void HandleCommand_JoinStar( int iStar );

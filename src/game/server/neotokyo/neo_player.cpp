@@ -24,6 +24,7 @@ ConVar bot_class( "bot_class", "0", 0, "", true, 0, true, 2 );
 ConVar bot_var( "bot_var", "0", 0, "", true, 0, true, 2 );
 
 #define GHOST_MAX_TRANSMIT_DISTANCE 1000.0f
+#define RECON_SUPER_JUMP_COST 40.0f
 
 
 
@@ -334,7 +335,7 @@ CNEOPlayer *CNEOPlayer::CreatePlayer( const char *className, edict_t *ed )
 
 int CNEOPlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 {
-	edict_t* pEdict = pInfo->m_pClientEnt;
+	/*edict_t* pEdict = pInfo->m_pClientEnt;
 
 	if ( !pEdict )
 		pEdict = engine->PEntityOfEntIndex( 0 );
@@ -362,12 +363,12 @@ int CNEOPlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 						float fDistance = GetAbsOrigin().LengthSqr() - pPlayer->GetAbsOrigin().LengthSqr();
 
 						if ( fDistance < GHOST_MAX_TRANSMIT_DISTANCE )
-							return 8;
+							return FL_EDICT_ALWAYS;
 					}
 				}
 			}
 		}
-	}
+	}*/
 
 	return BaseClass::ShouldTransmit( pInfo );
 }
@@ -404,8 +405,6 @@ void CNEOPlayer::PreThink( void )
 	BaseClass::PreThink();	 
 	State_PreThink();
 
-	ResetMaxSpeed();
-
 	ResetSprint();
 	ResetSprintNRG();
 	ResetThermoptics();
@@ -418,6 +417,8 @@ void CNEOPlayer::PreThink( void )
 	UpdateVision();
 
 	SetSomething( gpGlobals->curtime - m_Unknown3564 );
+
+	ResetMaxSpeed();
 
 	if ( m_Local.m_bDucked )	   
 		m_fTurnSpeed = 1.0f;
@@ -486,7 +487,7 @@ void CNEOPlayer::Precache()
 void CNEOPlayer::Spawn()
 {
 	SetModel( NEO_VIP_PLAYER_MODEL );
-	//RemoveEffects( EF_NODRAW | EF_NOINTERP );
+	RemoveEffects( EF_NODRAW | EF_NOINTERP );
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
@@ -511,7 +512,7 @@ void CNEOPlayer::Spawn()
 void CNEOPlayer::InitialSpawn( void )
 {
 	BaseClass::InitialSpawn(); 
-	State_Enter( STATE_INTRO );
+	State_Transition( STATE_INTRO );
 }
 
 void CNEOPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
@@ -665,7 +666,7 @@ void CNEOPlayer::Event_Killed( const CTakeDamageInfo &info )
 				pAttacker->IncrementFragCount( 2 );
 
 				NEOGameRules()->m_iMVP = edictIndex;
-				NEOGameRules()->m_Unknown624 = true;
+				NEOGameRules()->SetUnknown624( true );
 			}		
 			else
 			{
@@ -675,7 +676,7 @@ void CNEOPlayer::Event_Killed( const CTakeDamageInfo &info )
 				int edictIndex = engine->IndexOfEdict( pAttacker->edict() );
 
 				NEOGameRules()->m_iMVP = edictIndex;
-				NEOGameRules()->m_Unknown624 = true;
+				NEOGameRules()->SetUnknown624( true );
 			}
 		}  
 	}
@@ -684,7 +685,7 @@ void CNEOPlayer::Event_Killed( const CTakeDamageInfo &info )
 	State_Transition( STATE_PLAYDEATH );
 
 	color32 nothing = { 0, 0, 0, 255 };
-	UTIL_ScreenFade( this, nothing, 0, 0, FFADE_OUT | FFADE_STAYOUT );
+	UTIL_ScreenFade( this, nothing, 7.5f, 0, FFADE_OUT | FFADE_STAYOUT );
 	
 	m_bWasKilled = true;
 	m_fTimeKilled = gpGlobals->curtime;	
@@ -1317,7 +1318,7 @@ void CNEOPlayer::State_Enter_ACTIVE()
 
 	m_Local.m_iHideHUD = 0;
 
-	//RemoveEffects( EF_NODRAW | EF_NOSHADOW | EF_NOINTERP );
+	RemoveEffects( EF_NODRAW | EF_NOSHADOW | EF_NOINTERP );
 
 	if ( GetTeamNumber() == TEAM_JINRAI || GetTeamNumber() == TEAM_NSF )
 		GiveEquipment();
@@ -1353,15 +1354,13 @@ void CNEOPlayer::State_PreThink_ACTIVE()
 }
 
 void CNEOPlayer::State_Enter_INTRO()
-{
+{										   
 	SetMoveType( MOVETYPE_NONE );
 	SetSolidFlags( FSOLID_NOT_SOLID );
+	AddEffects( EF_NODRAW | EF_NOINTERP );
 
-	m_iLives = 1;
-
-	if ( m_lifeState != LIFE_RESPAWNABLE )
-		m_lifeState = LIFE_RESPAWNABLE;
-
+	m_iLives = 1;		  
+	m_lifeState = LIFE_RESPAWNABLE;	   
 	m_Unknown4384 = gpGlobals->curtime;	  
 }
 
@@ -1374,7 +1373,7 @@ void CNEOPlayer::State_PreThink_INTRO()
 	if ( GetFlags() & FL_FAKECLIENT )
 	{
 		m_Unknown3700 = false;
-		State_Enter( STATE_PICKINGTEAM );
+		State_Transition( STATE_PICKINGTEAM );
 		return;
 	}
 
@@ -1385,7 +1384,7 @@ void CNEOPlayer::State_PreThink_INTRO()
 	{
 		m_Unknown3700 = false;
 		m_afButtonPressed &= ~(IN_ATTACK | IN_ATTACK2);
-		State_Enter( STATE_PICKINGTEAM );
+		State_Transition( STATE_PICKINGTEAM );
 	}
 }
 
@@ -1459,7 +1458,7 @@ void CNEOPlayer::State_Enter_PLAYDEATH()
 		PackDeadPlayerItems();
 
 	m_lifeState = LIFE_DYING;
-	m_flDeathTime = gpGlobals->curtime;
+	m_Unknown3704 = gpGlobals->curtime;
 
 	StartObserverMode( OBS_MODE_ROAMING );
 }
@@ -1470,7 +1469,7 @@ void CNEOPlayer::State_PreThink_PLAYDEATH()
 	{
 		m_bWasKilled = false;
 		color32 nothing = { 0, 0, 0, 255 };
-		UTIL_ScreenFade( this, nothing, 0, 0, FFADE_IN | FFADE_PURGE );
+		UTIL_ScreenFade( this, nothing, 1.25f, 0, FFADE_IN | FFADE_PURGE );
 	}
 
 	if ( GetFlags() & FL_ONGROUND )
@@ -1489,7 +1488,7 @@ void CNEOPlayer::State_PreThink_PLAYDEATH()
 		}
 	}
 
-	if ( m_Unknown3704 <= gpGlobals->curtime )
+	if ( m_Unknown3704 + 10 <= gpGlobals->curtime )
 		State_Transition( STATE_DEAD );
 }
 
@@ -1497,8 +1496,7 @@ void CNEOPlayer::State_Enter_DEAD()
 {
 	m_lifeState = LIFE_DEAD;
 	m_flPlaybackRate = 0.0f;
-	//AddEffects( EF_NOINTERP );
-	//AddEffects( EF_NODRAW | EF_NOINTERP );
+	AddEffects( EF_NODRAW | EF_NOINTERP );
 }
 
 void CNEOPlayer::State_PreThink_DEAD()
@@ -1508,28 +1506,31 @@ void CNEOPlayer::State_PreThink_DEAD()
 
 	if ( m_Unknown3704 + 15.0f >= gpGlobals->curtime || HasPhysicsFlag( PFLAG_OBSERVER ) )
 	{	   
-		if ( m_lifeState == LIFE_DEAD )
-		{
-			if ( m_iLives > 0 )
-			{
-				if ( NEOGameRules()->IsRoundInProgress() )
-				{		
-					ClientPrint( this, HUD_PRINTCENTER, "-ROUND ALREADY IN PROGRESS-" );
-					State_Transition( STATE_OBSERVERMODE );
-				}
-				else
-				{
-					m_lifeState = LIFE_RESPAWNABLE;
-					State_Transition( STATE_PICKINGCLASS );
-				}
-			}
-			else
-			{
-				State_Transition( STATE_OBSERVERMODE );
-			}
+		if ( m_lifeState != LIFE_DEAD )
+			goto ass;
+
+		if ( NEOGameRules()->m_iGameState != 2 )
+			m_iLives = 1;
+
+		if ( m_iLives == 0 )
+		{	
+			State_Transition( STATE_OBSERVERMODE );
+			return;
 		}
-		else
-		{		
+
+		if ( NEOGameRules()->IsRoundInProgress() )
+		{
+			ClientPrint( this, HUD_PRINTCENTER, "-ROUND ALREADY IN PROGRESS-" );
+			State_Transition( STATE_OBSERVERMODE );
+			return;
+		}
+
+		if ( !(m_nButtons & ~IN_SCORE) )
+		{
+			State_Transition( STATE_PICKINGCLASS );
+			m_lifeState = LIFE_RESPAWNABLE;
+
+ass:
 			if ( GetFlags() & FL_FAKECLIENT )
 			{
 				m_lifeState = LIFE_RESPAWNABLE;
@@ -1544,7 +1545,7 @@ void CNEOPlayer::State_Enter_OBSERVERMODE()
 	SetMoveType( MOVETYPE_OBSERVER );
 	ResetMaxSpeed();
 
-	if ( GetTeamNumber() == TEAM_SPECTATOR || m_iLives < 0 )
+	if ( GetTeamNumber() == TEAM_SPECTATOR || m_iLives <= 0 )
 	{		
 		ResetObserverMode();
 		StartObserverMode( OBS_MODE_CHASE );
@@ -1683,7 +1684,7 @@ bool CNEOPlayer::HandleCommand_JoinTeam( int team )
 		StopObserverMode();
 
 		AddSolidFlags( FSOLID_NOT_SOLID );
-		//AddEffects( EF_NODRAW | EF_NOINTERP );
+		AddEffects( EF_NODRAW | EF_NOINTERP );
 		SetMoveType( MOVETYPE_NOCLIP );
 
 		m_takedamage = DAMAGE_NO;
@@ -1850,7 +1851,7 @@ void CNEOPlayer::GetIntoGame()
 	m_lifeState = LIFE_ALIVE;
 	Spawn();
 
-	State_Enter( STATE_ACTIVE );
+	State_Transition( STATE_ACTIVE );
 }
 
 void CNEOPlayer::UpdatePlayerClassInfo()
@@ -1911,9 +1912,14 @@ void CNEOPlayer::ResetSprintNRG()
 	}
 
 	if ( m_afButtonReleased & IN_SPRINT )
+	{
 		m_iSprint = 0;
+	}
 	else if ( m_afButtonPressed & IN_SPRINT )
+	{
 		m_iSprint = 1;
+		m_Unknown3536 = false;
+	}
 
 	float fVelocity = GetLocalVelocity().Length2D();
 
@@ -1937,8 +1943,11 @@ void CNEOPlayer::ResetSprintNRG()
 		else
 			m_fSprintNRG -= (gpGlobals->curtime - m_Unknown3564) * 5.0f;
 		
-		if ( m_fSprintNRG > 100.0f )
-			m_fSprintNRG = 100.0f;
+		if ( m_fSprintNRG < 0 )
+		{
+			m_fSprintNRG = 0;
+			m_iSprint = 0;
+		}
 
 		if ( m_fSprintNRG <= 0.0f )
 		{
@@ -1961,7 +1970,7 @@ void CNEOPlayer::ResetThermoptics()
 
 	if ( m_iThermoptic == 1 )
 	{
-		m_fThermopticNRG = gpGlobals->curtime - m_Unknown3564;
+		m_fThermopticNRG -= (gpGlobals->curtime - m_Unknown3564);
 
 		if ( m_fThermopticNRG <= 0.0f )
 		{
@@ -1972,7 +1981,7 @@ void CNEOPlayer::ResetThermoptics()
 	}
 	else
 	{
-		m_fThermopticNRG = (gpGlobals->curtime - m_Unknown3564) * m_pPlayerClassInfo->Unknown28;
+		m_fThermopticNRG += (gpGlobals->curtime - m_Unknown3564) * m_pPlayerClassInfo->Unknown28;
 
 		if ( m_fThermopticNRG > m_pPlayerClassInfo->fMaxThermopticNRG )
 			m_fThermopticNRG = m_pPlayerClassInfo->fMaxThermopticNRG;
@@ -2186,8 +2195,8 @@ void CNEOPlayer::SetSomething( float idk )
 {
 	m_Unknown4380 -= idk * 35.0f;
 
-	if ( m_Unknown4380 < 0.0f )
-		m_Unknown4380 = 0.0f;
+	if ( m_Unknown4380 < 0 )
+		m_Unknown4380 = 0;
 }
 
 bool CNEOPlayer::UpdateTransition()
@@ -2256,6 +2265,17 @@ void CNEOPlayer::ResetMaxSpeed()
 		fMaxSpeed = 75.0f;
 
 	SetMaxSpeed( fMaxSpeed );
+}
+
+void CNEOPlayer::OnReconSuperJump()
+{
+	m_fSprintNRG -= RECON_SUPER_JUMP_COST;
+
+	if ( m_fSprintNRG <= 0 )
+	{			  
+		m_fSprintNRG = 0.0F;
+		m_iSprint = 0;
+	}
 }
 
 bool CNEOPlayer::CanMove()

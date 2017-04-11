@@ -160,7 +160,7 @@ void CNHudHealthSection::Paint()
 	g_pVGuiLocalize->ConvertANSIToUnicode( "INTEGRITY", buffer, sizeof( buffer ) );
 
 	DrawText( m_hTFont, buffer, m_flHealthText_XPos, m_flHealthText_YPos );
-	DrawProgressBar( m_flHealthBar_XPos, m_flHealthBar_XPos, m_flHealthBar_W, m_flHealthBar_H, m_iHealth / 100.0f );
+	DrawProgressBar( m_flHealthBar_XPos, m_flHealthBar_YPos, m_flHealthBar_W, m_flHealthBar_H, m_iHealth / 100.0f );
 	DrawNumber( m_hTFont, m_flHealthNum_XPos, m_flHealthNum_YPos, m_iHealth );
 
 	C_NEOPlayer* pLocalPlayer = C_NEOPlayer::GetLocalNEOPlayer();
@@ -184,7 +184,7 @@ void CNHudHealthSection::Paint()
 void CNHudHealthSection::DrawNumber( HFont hFont, int x, int y, int number )
 {
 	wchar_t buffer[ 10 ];
-	V_snwprintf( buffer, sizeof( buffer ), L"%d", number );
+	V_snwprintf( buffer, ARRAYSIZE( buffer ), L"%d", number );
 
 	int charWidth = surface()->GetCharacterWidth( hFont, 48 );
 

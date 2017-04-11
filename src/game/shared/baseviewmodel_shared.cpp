@@ -399,8 +399,9 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 #endif
 		{
 			// add weapon-specific bob 
-			pWeapon->AddViewmodelBob( this, vmorigin, vmangles );
+			pWeapon->UpdateShouldDrawViewmodel();
 			pWeapon->OverrideViewmodelBob( this, vmorigin, vmangles );
+			pWeapon->AddViewmodelBob( this, vmorigin, vmangles );
 #if defined ( NEO_DLL )
 			CalcViewModelLag( vmorigin, vmangles, vmangoriginal );
 #endif

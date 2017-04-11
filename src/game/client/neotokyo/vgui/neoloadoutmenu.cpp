@@ -145,7 +145,7 @@ const char* GetLoadoutVguiWeaponName( int teamNum, int classType, int rank, int 
 	return pLoadout[ num ].m_szVguiImage;
 }
 
-CNeoLoadoutMenu::CNeoLoadoutMenu( IViewPort *pViewPort ) : CNeoFrame( PANEL_TEAM )
+CNeoLoadoutMenu::CNeoLoadoutMenu( IViewPort *pViewPort ) : CNeoFrame( nullptr, PANEL_LOADOUT )
 {
 	m_pViewPort = pViewPort;
 

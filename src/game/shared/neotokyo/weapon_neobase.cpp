@@ -19,6 +19,7 @@
 	#include "dlight.h"
 	#include "iefx.h"
 	#include "materialsystem\imaterialvar.h"
+	#include "neo_thermhandler.h"
 
 #else
 
@@ -109,7 +110,7 @@ void CWeaponNEOBase::Precache()
 
 	const CNEOWeaponInfo& wpnData = GetNEOWpnData();	   	
 
-	//m_iTeam2ViewModelIndex = PrecacheModel( GetTeam2ViewModel() );
+	m_iTeam2ViewModelIndex = PrecacheModel( GetTeam2ViewModel() );
 
 	m_fTPMuzzleFlashScale = wpnData.m_fTPMuzzleFlashScale;	
 	m_bDrawCrosshair = wpnData.m_bDrawCrosshair;
@@ -147,121 +148,7 @@ bool CWeaponNEOBase::ShouldPredict()
 	return BaseClass::ShouldPredict();
 }
 
-class CThermopticHandler
-{
-public:
-	CThermopticHandler()
-	{
-		m_pThermMaterial = GetThermopticMaterial();
-		m_fTransparency = 0.0f;
-	}
-
-public:
-	void UpdateThermopticMaterial( float fNewTransparency )	
-	{
-		m_fTransparency = fNewTransparency * 0.2f; 
-
-		if ( !material )
-			return;
-
-		bool found = false;
-
-		IMaterialVar* refractamount = material->FindVar( "$refractamount", &found );
-
-		if ( found )
-			refractamount->SetFloatValue( m_fTransparency * 0.035f );
-
-		IMaterialVar* bluramount = material->FindVar( "$bluramount", &found );
-
-		if ( found )
-			bluramount->SetFloatValue( m_fTransparency * 20.0f + 10.5f );
-
-		IMaterialVar* refracttint = material->FindVar( "$refracttint", &found );
-
-		if ( found )
-			refracttint->SetVecValue( 0.85f - m_fTransparency * 0.8f, 0.85f - m_fTransparency * 0.6f, 0.85f - m_fTransparency * 0.6f );
-
-		IMaterialVar* fresnelreflection = material->FindVar( "$fresnelreflection", &found );
-
-		if ( found )
-			fresnelreflection->SetFloatValue( m_fTransparency + m_fTransparency + 0.25f );
-
-		IMaterialVar* bumptransform = material->FindVar( "$bumptransform", &found );
-
-		if ( found )
-		{
-			VMatrix matrix( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f );
-
-			if ( bumptransform->GetType() == MATERIAL_VAR_TYPE_MATRIX )
-				bumptransform->SetMatrixValue( matrix );
-			else
-				bumptransform->SetVecValue( 0.0f, 0.0f, 0.0f );
-		}
-	}
-	
-private:
-	IMaterial* CreateThermopticMaterial()
-	{
-		if ( !g_pMaterialSystem )
-			return nullptr;
-
-		KeyValues* keyValues = new KeyValues( "Refract" );
-
-		IMaterial* pThermMaterial = g_pMaterialSystem->CreateMaterial( "thermoptic", keyValues );
-
-		if ( !pThermMaterial )
-			return nullptr;
-
-		bool found = false;
-
-		pThermMaterial->SetShader( "Refract" );
-		pThermMaterial->SetMaterialVarFlag( MATERIAL_VAR_MODEL, true );
-		pThermMaterial->SetMaterialVarFlag( MATERIAL_VAR_SUPPRESS_DECALS, true );
-
-		IMaterialVar* refractamount = pThermMaterial->FindVar( "$refractamount", &found );
-
-		if ( found )
-			refractamount->SetFloatValue( 0.8f );
-
-		IMaterialVar* normalmap = pThermMaterial->FindVar( "$normalmap", &found );
-
-		if ( found )
-		{
-			ITexture* waterTexture = g_pMaterialSystem->FindTexture( "dev/water_normal", "ClientEffect textures" );
-
-			if ( waterTexture )
-				normalmap->SetTextureValue( waterTexture );
-		}
-
-		IMaterialVar* bumpframe = pThermMaterial->FindVar( "$bumpframe", &found );
-
-		if ( found )
-			bumpframe->SetIntValue( 0 );
-
-		return pThermMaterial;
-	}
-
-	IMaterial* GetThermopticMaterial()
-	{
-		static IMaterial* pThermopticMaterial = nullptr;
-
-		if ( !pThermopticMaterial )
-		{
-			pThermopticMaterial = CreateThermopticMaterial();
-			Assert( pThermopticMaterial );
-		}
-
-		return pThermopticMaterial;
-	}
-
-private:
-	IMaterial* m_pThermMaterial;
-	float m_fTransparency;
-};
-
-CThermopticHandler g_ThermopticHandler;
-
-int CWeaponNEOBase::InternalDrawModel( int flags )
+/*int CWeaponNEOBase::InternalDrawModel( int flags )
 {
 	C_NEOPlayer* owner = dynamic_cast< C_NEOPlayer* >(GetOwner());
 	C_NEOPlayer* localPlayer = C_NEOPlayer::GetLocalNEOPlayer();
@@ -274,7 +161,7 @@ int CWeaponNEOBase::InternalDrawModel( int flags )
 		if ( !g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_0() )
 			return 0;
 
-		IMaterial* thermopticMaterial = GetThermopticMaterial();
+		IMaterial* thermopticMaterial = g_ThermopticHandler.GetThermopticMaterial();
 
 		g_ThermopticHandler.UpdateThermopticMaterial( owner->m_fThermopticAlpha );
 
@@ -349,7 +236,7 @@ int CWeaponNEOBase::InternalDrawModel( int flags )
 	}
 
 	return BaseClass::InternalDrawModel( flags );
-}
+}*/
 #endif
 
 const CNEOWeaponInfo &CWeaponNEOBase::GetNEOWpnData() const
@@ -438,11 +325,13 @@ void CWeaponNEOBase::ItemPostFrame()
 	if ( owner->GetObserverMode() != OBS_MODE_NONE || NEOGameRules()->IsInFreezePeriod() )
 		return;
 
-	if ( !owner || owner->m_iSprint == 1 || owner->GetMoveType() == MOVETYPE_LADDER )
+	BaseClass::ItemPostFrame();
+
+	if ( !owner || owner->m_iSprint == 1 || owner->IsOnLadder() )
 		return;
 
 	if ( m_Unknown1456
-		&& owner->m_nButtons & 0x40000000 // what button is this? ( 1 << 30 )
+		&& owner->m_nButtons & IN_MELEE
 		&& gpGlobals->curtime > m_flNextPrimaryAttack && gpGlobals->curtime > m_flNextSecondaryAttack )
 	{
 		m_Unknown1360 = true;
@@ -455,13 +344,13 @@ void CWeaponNEOBase::ItemPostFrame()
 
 		float seqDuration = SequenceDuration() + gpGlobals->curtime;
 
-		if ( m_flNextSecondaryAttack != seqDuration )
-			m_flNextSecondaryAttack = seqDuration;
-
-		if ( m_flNextPrimaryAttack != m_flNextSecondaryAttack )
-			m_flNextPrimaryAttack = m_flNextSecondaryAttack;
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = seqDuration;
 
 		SetWeaponIdleTime( seqDuration );
+	}
+	else if ( m_Unknown1360 && gpGlobals->curtime >= m_Unknown1364 )
+	{
+		m_Unknown1360 = false;
 	}
 }
 
@@ -492,6 +381,7 @@ ConVar v_vmoffsetright( "v_vmoffsetright", "0.0", FCVAR_CLIENTDLL );
 ConVar v_vmangleyaw( "v_vmangleyaw", "0.0", FCVAR_CLIENTDLL );
 ConVar v_vmanglepitch( "v_vmanglepitch", "0.0", FCVAR_CLIENTDLL );
 ConVar v_vmangleroll( "v_vmangleroll", "0.0", FCVAR_CLIENTDLL );
+
 
 float CWeaponNEOBase::CalcViewmodelBob()
 {
@@ -560,16 +450,16 @@ float CWeaponNEOBase::CalcViewmodelBob()
 
 	//NOTENOTE: We don't use this return value in our case (need to restructure the calculation function setup!)
 	return 0.0f;
-}
+}		
 
 void CWeaponNEOBase::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
 {
 	float bobMult = 1.0f;
 
-	switch ( m_iUnknown )
+	switch ( m_Unknown1892 )
 	{
 		case 1:
-			bobMult = m_fUnknown2 * 0.5f + 0.5f;
+			bobMult = m_Unknown1896 * 0.5f + 0.5f;
 			break;
 
 		case 2:
@@ -577,56 +467,65 @@ void CWeaponNEOBase::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin,
 			break;
 
 		case 3:
-			bobMult = 1.0f - 0.5f * m_fUnknown2;
+			bobMult = 1.0f - 0.5f * m_Unknown1896;
+			break;
 	}
 
-	Vector forward, right;
-
-	AngleVectors( angles, &forward, &right, nullptr );
+	Vector	forward, right;
+	AngleVectors( angles, &forward, &right, NULL );
 
 	CalcViewmodelBob();
 
 	VectorMA( origin, g_verticalBob * 0.1 * bobMult, forward, origin );
 
-	origin.z += g_verticalBob * 0.2f * bobMult;
+	origin[2] += g_verticalBob * 0.2f * bobMult;
 
-	angles.z += g_verticalBob * 0.5f * bobMult;
-	angles.x -= g_verticalBob * 0.4f * bobMult;
+	angles[ ROLL ] += g_verticalBob * 0.5f * bobMult;
+	angles[ PITCH ] -= g_verticalBob * 0.4f * bobMult;
 
-	angles.y -= g_lateralBob * 0.3f * bobMult;
+	angles[ YAW ] -= g_lateralBob * 0.3f * bobMult;
 
 	VectorMA( origin, bobMult * (g_lateralBob * 0.8f), right, origin );
 }
 
 void CWeaponNEOBase::OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
-{
-	Vector forward, right;
-
+{		
+	Vector forward, right;		
 	AngleVectors( angles, &forward, &right, nullptr );
 
 	float fOffsetUp = 0.0f;
-	float fOffsetForward = 1.0f;
-	float fOffsetRight = 1.0f;
+	float fOffsetForward = 0.0f;
+	float fOffsetRight = 0.0f;
 	float fAngleYaw = 0.0f;
 	float fAnglePitch = 0.0f;
 	float fAngleRoll = 0.0f;
 
 	if ( !v_vmtweak.GetBool() )
 	{
-		switch ( m_iUnknown )
+		switch ( m_Unknown1892 )
 		{
+			case 0:
+				m_fFov = m_fVMFov;
+				fOffsetUp = m_fVMOffsetUp;
+				fOffsetForward = m_fVMOffsetForward;
+				fOffsetRight = m_fVMOffsetRight;
+				fAngleYaw = m_fVMAngleYaw;
+				fAnglePitch = m_fVMAnglePitch;
+				fAngleRoll = m_fVMAngleRoll;
+				break;
+
 			case 1:
-				m_fFov = m_fVMFov = m_fVMFov - m_fVMAimFov * m_fUnknown2 + m_fVMAimFov;
-				fOffsetUp = m_fVMOffsetUp - m_fVMAimOffsetUp * m_fUnknown2 + m_fVMAimOffsetUp;
-				fOffsetForward = m_fVMOffsetForward - m_fVMAimOffsetForward * m_fUnknown2 + m_fVMAimOffsetForward;
-				fOffsetRight = m_fVMOffsetRight - m_fVMAimOffsetRight * m_fUnknown2 + m_fVMAimOffsetRight;
-				fAngleYaw = m_fVMAngleYaw - m_fVMAimAngleYaw * m_fUnknown2 + m_fVMAimAngleYaw;
-				fAnglePitch = m_fVMAnglePitch - m_fVMAimAnglePitch * m_fUnknown2 + m_fVMAimAnglePitch;
-				fAngleRoll = m_fVMAngleRoll - m_fVMAimAngleRoll * m_fUnknown2 + m_fVMAimAngleRoll;
+				m_fFov = (m_fVMFov - m_fVMAimFov) * m_Unknown1896 + m_fVMAimFov;
+				fOffsetUp = (m_fVMOffsetUp - m_fVMAimOffsetUp) * m_Unknown1896 + m_fVMAimOffsetUp;
+				fOffsetForward = (m_fVMOffsetForward - m_fVMAimOffsetForward) * m_Unknown1896 + m_fVMAimOffsetForward;
+				fOffsetRight = (m_fVMOffsetRight - m_fVMAimOffsetRight) * m_Unknown1896 + m_fVMAimOffsetRight;
+				fAngleYaw = (m_fVMAngleYaw - m_fVMAimAngleYaw) * m_Unknown1896 + m_fVMAimAngleYaw;
+				fAnglePitch = (m_fVMAnglePitch - m_fVMAimAnglePitch) * m_Unknown1896 + m_fVMAimAnglePitch;
+				fAngleRoll = (m_fVMAngleRoll - m_fVMAimAngleRoll) * m_Unknown1896 + m_fVMAimAngleRoll;
 				break;
 
 			case 2:
-				m_fFov = m_fVMFov = m_fVMAimFov;
+				m_fFov = m_fVMAimFov;
 				fOffsetUp = m_fVMAimOffsetUp;
 				fOffsetForward = m_fVMAimOffsetForward;
 				fOffsetRight = m_fVMAimOffsetRight;
@@ -636,30 +535,21 @@ void CWeaponNEOBase::OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &or
 				break;
 
 			case 3:
-				m_fFov = m_fVMFov = m_fVMAimFov - m_fVMFov * m_fUnknown2 + m_fVMFov;
-				fOffsetUp = m_fVMAimOffsetUp - m_fVMOffsetUp * m_fUnknown2 + m_fVMOffsetUp;
-				fOffsetForward = m_fVMAimOffsetForward - m_fVMOffsetForward * m_fUnknown2 + m_fVMOffsetForward;
-				fOffsetRight = m_fVMAimOffsetRight - m_fVMOffsetRight * m_fUnknown2 + m_fVMOffsetRight;
-				fAngleYaw = m_fVMAimAngleYaw - m_fVMAngleYaw * m_fUnknown2 + m_fVMAngleYaw;
-				fAnglePitch = m_fVMAimAnglePitch - m_fVMAnglePitch * m_fUnknown2 + m_fVMAnglePitch;
-				fAngleRoll = m_fVMAimAngleRoll - m_fVMAngleRoll * m_fUnknown2 + m_fVMAngleRoll;
-				break;
-
-			default:
-				m_fFov = m_fVMFov = m_fVMFov;
-				fOffsetUp = m_fVMOffsetUp;
-				fOffsetForward = m_fVMOffsetForward;
-				fOffsetRight = m_fVMOffsetRight;
-				fAngleYaw = m_fVMAngleYaw;
-				fAnglePitch = m_fVMAnglePitch;
-				fAngleRoll = m_fVMAngleRoll;
-		}
-	}	
+				m_fFov = (m_fVMAimFov - m_fVMFov) * m_Unknown1896 + m_fVMFov;
+				fOffsetUp = (m_fVMAimOffsetUp - m_fVMOffsetUp) * m_Unknown1896 + m_fVMOffsetUp;
+				fOffsetForward = (m_fVMAimOffsetForward) - m_fVMOffsetForward * m_Unknown1896 + m_fVMOffsetForward;
+				fOffsetRight = (m_fVMAimOffsetRight) - m_fVMOffsetRight * m_Unknown1896 + m_fVMOffsetRight;
+				fAngleYaw = (m_fVMAimAngleYaw - m_fVMAngleYaw) * m_Unknown1896 + m_fVMAngleYaw;
+				fAnglePitch = (m_fVMAimAnglePitch - m_fVMAnglePitch) * m_Unknown1896 + m_fVMAnglePitch;
+				fAngleRoll = (m_fVMAimAngleRoll - m_fVMAngleRoll) * m_Unknown1896 + m_fVMAngleRoll;
+				break;	   			
+}
+	}
 	else
 	{
 		if ( bAimed )
 		{
-			m_fFov = m_fVMFov = v_vm_aimfov.GetFloat();
+			m_fFov = v_vm_aimfov.GetFloat();
 			fOffsetUp = v_vmaimoffsetup.GetFloat();
 			fOffsetForward = v_vmaimoffsetforward.GetFloat();
 			fOffsetRight = v_vmaimoffsetright.GetFloat();
@@ -670,7 +560,7 @@ void CWeaponNEOBase::OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &or
 
 		else
 		{
-			m_fFov = m_fVMFov = v_vm_fov.GetFloat();
+			m_fFov = v_vm_fov.GetFloat();
 			fOffsetUp = v_vmoffsetup.GetFloat();
 			fOffsetForward = v_vmoffsetforward.GetFloat();
 			fOffsetRight = v_vmoffsetright.GetFloat();
@@ -690,19 +580,114 @@ void CWeaponNEOBase::OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &or
 	angles.z += fAngleRoll;
 }
 
-#else
-
-float CWeaponNEOBase::CalcViewmodelBob( void )
+void CWeaponNEOBase::UpdateShouldDrawViewmodel()
 {
-	return 0.0f;
+	switch ( m_Unknown1892 )
+	{
+		case 0:
+			if ( bAimed )
+			{
+				m_Unknown1892 = 1;
+				m_Unknown1904 = gpGlobals->curtime + 0.1f;
+				m_Unknown1896 = (m_Unknown1904 - gpGlobals->curtime) / 0.1f;
+			}	  			
+			break;
+
+		case 1:
+			if ( bAimed )
+			{		 
+				if ( m_Unknown1904 <= gpGlobals->curtime )
+				{
+					m_Unknown1892 = 2;
+					m_Unknown1896 = 1.0f;
+				}
+				else
+				{
+					m_Unknown1896 = (m_Unknown1904 - gpGlobals->curtime) / 0.1f;
+				}
+			}
+			else
+			{
+				m_Unknown1892 = 3;
+				m_Unknown1904 = 0.1f - (m_Unknown1904 - gpGlobals->curtime) + gpGlobals->curtime;
+				m_Unknown1896 = (m_Unknown1904 - gpGlobals->curtime) / 0.1f;
+			}
+			break;
+			
+		case 2:
+			if ( !bAimed )
+			{
+				m_Unknown1892 = 3;
+				m_Unknown1904 = gpGlobals->curtime + 0.1f;
+				m_Unknown1896 = 1.0f;
+			}
+			break;
+
+		case 3:
+			if ( bAimed )
+			{
+				m_Unknown1892 = 3;
+				m_Unknown1904 = 0.1f - (m_Unknown1904 - gpGlobals->curtime) + gpGlobals->curtime;
+				m_Unknown1896 = (m_Unknown1904 - gpGlobals->curtime) / 0.1f;
+			}
+			else
+			{
+				if ( m_Unknown1904 <= gpGlobals->curtime )
+				{
+					m_Unknown1892 = 0;
+					m_Unknown1896 = 0.0f;
+				}
+				else
+				{	   
+					m_Unknown1896 = (m_Unknown1904 - gpGlobals->curtime) / 0.1f;
+				}
+			}
+			break;
+	}
+
+	SetShouldDrawViewmodel();
 }
+
+void CWeaponNEOBase::SetShouldDrawViewmodel()
+{
+	m_Unknown1932 = 75.0f;
+
+	if ( m_Unknown1912 == 0 )
+		return;
+
+	switch ( m_Unknown1892 )
+	{
+		case 1:
+			if ( m_Unknown1912 == 1 )
+				m_Unknown1932 = (75.0f - m_Unknown1928) * m_Unknown1896 + m_Unknown1928;
+			break;
+
+		case 2:
+			if ( m_Unknown1912 == 1 || m_Unknown1912 == 2 )
+				m_Unknown1932 = m_Unknown1928;
+			break;
+
+		case 3:
+			if ( m_Unknown1912 == 1 )	
+				m_Unknown1932 = (m_Unknown1928 - 75.0f) * m_Unknown1896 + 75.0f;
+			break;
+	}
+
+	CNEOPlayer* pPlayer = GetPlayerOwner();
+
+	if ( pPlayer )
+		pPlayer->m_Local.m_bDrawViewmodel = m_Unknown1912 != 2 || m_Unknown1892 != 2;
+}
+
+#else
 
 void CWeaponNEOBase::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
 {
 }
 
-void CWeaponNEOBase::OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
-{  
+float CWeaponNEOBase::CalcViewmodelBob()
+{
+	return 0.0f;
 }
 
 #endif
@@ -764,4 +749,14 @@ bool CWeaponNEOBase::CanClassUseThis( int iClassType )
 		default:
 			return false;
 	}
+}
+
+int CWeaponNEOBase::GetOwnerTeamNumber()
+{
+	CNEOPlayer* pOwner = GetPlayerOwner();
+
+	if ( !pOwner )
+		return TEAM_INVALID;
+
+	return pOwner->GetTeamNumber();
 }

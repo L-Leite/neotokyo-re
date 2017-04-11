@@ -9,7 +9,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-CNeoLoadoutMenu_Dev::CNeoLoadoutMenu_Dev( IViewPort *pViewPort ) : CNeoFrame( PANEL_TEAM )
+CNeoLoadoutMenu_Dev::CNeoLoadoutMenu_Dev( IViewPort *pViewPort ) : CNeoFrame( nullptr, PANEL_LOADOUT_DEV )
 {
 	m_pViewPort = pViewPort;
 

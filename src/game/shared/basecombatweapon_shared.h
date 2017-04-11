@@ -338,11 +338,12 @@ public:
 	void					SetOwner( CBaseCombatCharacter *owner );
 	virtual void			OnPickedUp( CBaseCombatCharacter *pNewOwner );
 
-	virtual void			AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles ) {};
-	virtual float			CalcViewmodelBob( void ) { return 0.0f; };
-#ifdef NEO_DLL
+#if defined( NEO_DLL ) && defined( CLIENT_DLL )
+	virtual void	UpdateShouldDrawViewmodel() {}
 	virtual void	OverrideViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles ) {}
 #endif
+	virtual void			AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles ) {};
+	virtual float			CalcViewmodelBob( void ) { return 0.0f; };
 
 	// Returns information about the various control panels
 	virtual void 			GetControlPanelInfo( int nPanelIndex, const char *&pPanelName );

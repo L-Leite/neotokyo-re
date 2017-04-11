@@ -65,7 +65,7 @@ const char* GetNameOfClass( int teamId, int classId, int variant )
 }
 
 
-CNeoClassMenu::CNeoClassMenu( IViewPort *pViewPort ) : CNeoFrame( PANEL_CLASS )
+CNeoClassMenu::CNeoClassMenu( IViewPort *pViewPort ) : CNeoFrame( nullptr, PANEL_CLASS )
 {
 	m_pViewPort = pViewPort;
 

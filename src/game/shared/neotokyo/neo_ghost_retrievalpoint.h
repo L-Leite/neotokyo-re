@@ -40,7 +40,11 @@ public:
 	int GetDefaultTeam();
 
 	int GetOwningTeamNumber();
+#ifdef GAME_DLL
 	void SetOwningTeamNumber( int team );
+#endif
+
+	Vector GetPosition();
 
 	int GetRadius();
 
@@ -62,9 +66,16 @@ inline int CNeoGhostRetrievalPoint::GetOwningTeamNumber()
 	return m_OwningTeamNumber;
 }
 
+#ifdef GAME_DLL
 inline void CNeoGhostRetrievalPoint::SetOwningTeamNumber( int team )
 {
 	m_OwningTeamNumber = team;
+}
+#endif
+
+inline Vector CNeoGhostRetrievalPoint::GetPosition()
+{
+	return m_Position;
 }
 
 inline int CNeoGhostRetrievalPoint::GetRadius()

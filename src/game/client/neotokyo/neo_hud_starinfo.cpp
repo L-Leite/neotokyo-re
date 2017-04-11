@@ -36,7 +36,8 @@ protected:
 	virtual void Paint();
 
 private:				
-	void DrawStar();
+	void DrawStar( C_NEOPlayer* pLocalPlayer );
+	void DrawSquadmatesNames( C_NEOPlayer* pLocalPlayer );
 
 	CPanelAnimationVarAliasType( float, m_flLineHeight, "LineHeight", "48", "proportional_float" );
 
@@ -138,133 +139,6 @@ void CHudStarInfo::PaintBackground()
 {
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: draws the zoom effect
-//-----------------------------------------------------------------------------
-void CHudStarInfo::Paint()
-{		  
-	C_NEOPlayer* pPlayer = C_NEOPlayer::GetLocalNEOPlayer();
-
-	if ( !pPlayer )
-		return;
-
-	DrawStar();
-
-	int wide, tall;
-	GetSize( wide, tall );
-
-	bool bSomething = false;
-	int iSomething = 0;
-
-	int x = 0;
-	int y = 0;
-
-	Vector vecSomething( 0.0f, 0.0f, 55.0f );
-
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		if ( !g_PR->IsLocalPlayer( i ) )
-		{ 
-			C_NEOPlayer* player = (C_NEOPlayer*) UTIL_PlayerByIndex( i );
-
-			if ( !player )
-				continue;
-
-			if ( g_PR->GetTeam( i ) != player->GetTeamNumber() )
-			{
-				player->m_Unknown4132 = 0;
-				break;
-			}
-
-			if ( !g_PR->IsAlive( i ) )
-				continue;
-
-			iSomething = m_Unknown172;
-
-			if ( g_PR->GetStar( i ) != player->m_iStar || player->m_iStar <= STAR_NONE )
-				break;
-
-			bSomething = true;
-			iSomething = m_Unknown168;
-
-			player->m_Unknown4132 = 0;
-
-			if ( GetVectorInScreenSpace( player->GetAbsOrigin(), x, y, &vecSomething ) )
-				break;
-		}
-	}
-
-	if ( x > 0 && x > wide )
-	{		  
-		if ( y > 0 && y > tall )
-		{
-			float v22 = 0.0f;
-			float v23 = 0.0f;
-
-			if ( x > wide / 2 )
-				v22 =  1.0f - (wide * 2.5f / wide * 0.5f) * 90.f; 
-			else
-				v22 = (wide / wide * 0.5f) * 90.f;
-
-			if ( y > tall / 2 )
-				v23 = 1.0f - ( tall - 0.5f * tall / tall * 2 );
-			else
-				v23 = tall / 0.5f + tall;
-
-			int v24 = v23 * 90.0f + v22;
-
-			int v25 = 16;
-
-			if ( bSomething )
-				v25 = 24;
-
-			Color color = g_PR->GetTeamColor( pPlayer->entindex() );
-
-			if ( v24 > 150 )
-			{
-				if ( bSomething )
-				{
-					color[ 3 ] = (v24 - 150) * 255.0f / 30.0f;
-
-					vgui::surface()->DrawSetTextFont( m_hTextFont );
-
-					wchar_t buffer[ 250 ];
-					g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(), buffer, sizeof( buffer ) );
-
-					int textWide, textTall;
-					vgui::surface()->GetTextSize( m_hTextFont, buffer, textWide, textTall );
-
-					vgui::surface()->DrawSetTextPos( x - textWide / 2, v25 + y );
-					vgui::surface()->DrawSetTextColor( color );
-					vgui::surface()->DrawPrintText( buffer, V_wcslen( buffer ) );
-
-					float length = (pPlayer->GetAbsOrigin() - pPlayer->EyePosition()).Length();
-
-					wchar_t distBuffer[ 30 ];
-					V_snwprintf( distBuffer, sizeof( distBuffer ), L"DISTANCE: %dm", length / 12.0f / 3.0f / 0.915f );
-
-					int distWide, distTall;
-					vgui::surface()->GetTextSize( m_hTextFont, distBuffer, distWide, distTall );
-					vgui::surface()->DrawSetTextPos( x - distWide / 2, y + v25 + distTall );
-					vgui::surface()->DrawPrintText( distBuffer, V_wcslen( distBuffer ) );
-
-					vgui::surface()->DrawSetTextPos( x - distWide / 2, y + v24 + distTall ); 	
-
-					color[ 3 ] = 225;
-				}
-				else
-				{
-					color[ 3 ] = 190;
-				}	
-				
-				vgui::surface()->DrawSetTextColor( color );
-				vgui::surface()->DrawSetTexture( iSomething );
-				vgui::surface()->DrawTexturedRect( x - v25, y - v25, x + v25, y + v25 );
-			}
-		}
-	}
-}
-
 static const char* s_szClassRanks[]
 {
 	"Unassigned",
@@ -284,10 +158,8 @@ static const char* s_szRankAbreviations[]
 	"Maj"
 };
 
-void CHudStarInfo::DrawStar()
+void CHudStarInfo::DrawStar( C_NEOPlayer* pLocalPlayer )
 {
-	C_NEOPlayer* pPlayer = C_NEOPlayer::GetLocalNEOPlayer();
-
 	if ( m_Unknown224 - gpGlobals->curtime < 0.0f )
 	{
 		m_Unknown220 = !m_Unknown220;
@@ -296,14 +168,14 @@ void CHudStarInfo::DrawStar()
 
 	Color starColor( 128, 128, 128, 96 );
 
-	if ( pPlayer->m_iStar > STAR_NONE )
+	if ( pLocalPlayer->m_iStar > STAR_NONE )
 	{
-		starColor = g_PR->GetTeamColor( pPlayer->GetTeamNumber() );
+		starColor = g_PR->GetTeamColor( pLocalPlayer->GetTeamNumber() );
 		starColor[ 3 ] = 155;
 	}
 
 	vgui::surface()->DrawSetColor( starColor );
-	vgui::surface()->DrawSetTexture( m_StarTextures[ pPlayer->m_iStar ] );
+	vgui::surface()->DrawSetTexture( m_StarTextures[ pLocalPlayer->m_iStar ] );
 	vgui::surface()->DrawTexturedRect( 0, 0, 192, 48 );
 
 	vgui::surface()->DrawSetTextFont( m_hTextFont );
@@ -318,7 +190,7 @@ void CHudStarInfo::DrawStar()
 
 	wchar_t convertedBuffer[ 512 ];
 
-	if ( pPlayer->m_iStar > STAR_NONE )
+	if ( pLocalPlayer->m_iStar > STAR_NONE )
 	{
 		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
@@ -362,4 +234,161 @@ void CHudStarInfo::DrawStar()
 		vgui::surface()->DrawSetTextPos( 10, 48 );
 		vgui::surface()->DrawSetTextColor( 255, 255, 255, 55 );
 	}
+}
+
+
+void CHudStarInfo::DrawSquadmatesNames( C_NEOPlayer* pLocalPlayer )
+{
+	int wide, tall;
+	GetSize( wide, tall );
+
+	bool bSomething = false;
+	int iSomething = 0;
+
+	int x = 0;
+	int y = 0;
+
+	C_NEOPlayer* pPlayer = nullptr;
+
+	Vector vOffset( 0.0f, 0.0f, 55.0f );
+
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		if ( !g_PR->IsLocalPlayer( i ) )
+		{ 
+			pPlayer = (C_NEOPlayer*) UTIL_PlayerByIndex( i );
+
+			if ( !pPlayer )
+				continue;
+
+			if ( g_PR->GetTeam( i ) != pPlayer->GetTeamNumber() )
+			{
+				pPlayer->m_Unknown4132 = 0;
+				break;
+			}
+
+			if ( !g_PR->IsAlive( i ) )
+				continue;
+
+			iSomething = m_Unknown172;
+
+			if ( g_PR->GetStar( i ) != pPlayer->m_iStar || pPlayer->m_iStar <= STAR_NONE )
+				break;
+
+			bSomething = true;
+			iSomething = m_Unknown168;
+
+			pPlayer->m_Unknown4132 = 0;
+
+			if ( GetVectorInScreenSpace( pPlayer->GetAbsOrigin(), x, y, &vOffset ) )
+				break;
+		}
+	}
+
+	if ( x >= 0 )
+	{
+		if ( x > wide )
+		{  
+			x = wide;
+		}
+	}
+	else
+	{
+		x = 0;
+	}
+
+	if ( y >= 0 )
+	{
+		if ( y > tall )
+		{		  
+			y = tall;
+		}
+	}
+	else
+	{
+		y = 0;
+	}
+	
+	float v22 = 0.0f;
+	float v23 = 0.0f;
+
+	if ( x > wide / 2 )
+		v22 = 1 - (x - wide * 0.5f) / (wide * 0.5f) * 90;
+	else
+		v22 = x / (wide * 0.5f) * 90;
+
+	if ( y > tall / 2 )
+		v23 = 1 - (y - tall * 0.5f) / (tall * 0.5f) * 90;
+	else
+		v23 = y / (tall * 0.5f) * 90;
+
+	int v24 = v23 + v22;
+
+	int v25 = 16;
+
+	if ( bSomething )
+		v25 = 24;
+
+	Color color = g_PR->GetTeamColor( pLocalPlayer->entindex() );
+
+	if ( v24 > 150 )
+	{
+		if ( bSomething )
+		{
+			color[ 3 ] = (v24 - 150) * 255.0f / 30.0f;
+
+			vgui::surface()->DrawSetTextFont( m_hTextFont );
+
+			wchar_t buffer[ 250 ];
+			g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(), buffer, sizeof( buffer ) ); // Why would you use vguilocalize
+
+			int textWide, textTall;
+			vgui::surface()->GetTextSize( m_hTextFont, buffer, textWide, textTall );
+
+			vgui::surface()->DrawSetTextPos( x - textWide / 2, v25 + y );
+			vgui::surface()->DrawSetTextColor( color );
+			vgui::surface()->DrawPrintText( buffer, V_wcslen( buffer ) );
+
+			Vector vOrigin = pPlayer->GetAbsOrigin();
+			Vector vEyePosition = pLocalPlayer->EyePosition();
+			vOrigin *= METERS_PER_INCH;
+			vEyePosition *= METERS_PER_INCH;
+					
+			float fDistance = vOrigin.Length() - vEyePosition.Length();
+
+			wchar_t distBuffer[ 30 ];					
+			V_snwprintf( distBuffer, ARRAYSIZE( distBuffer ), L"DISTANCE: %dm", fDistance ); // Game has fDistance / 12.0f / 3.0f / 0.915f instead of fDistance *= METERS_PER_INCH... shouldn't make much a difference though.
+
+			int distWide, distTall;
+			vgui::surface()->GetTextSize( m_hTextFont, distBuffer, distWide, distTall );
+			vgui::surface()->DrawSetTextPos( x - distWide / 2, y + v25 + distTall );
+			vgui::surface()->DrawPrintText( distBuffer, V_wcslen( distBuffer ) );
+
+			vgui::surface()->DrawSetTextPos( x - distWide / 2, y + v24 + distTall ); 	
+
+			color[ 3 ] = 225;
+		}
+		else
+		{
+			color[ 3 ] = 190;
+		}	
+		
+		vgui::surface()->DrawSetTextColor( color );
+		vgui::surface()->DrawSetTexture( iSomething );
+		vgui::surface()->DrawTexturedRect( x - v25, y - v25, x + v25, y + v25 );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: draws the zoom effect
+//-----------------------------------------------------------------------------
+void CHudStarInfo::Paint()
+{		  
+	C_NEOPlayer* pLocalPlayer = C_NEOPlayer::GetLocalNEOPlayer();
+
+	if ( !pLocalPlayer )
+		return;
+
+	DrawStar( pLocalPlayer );
+	DrawSquadmatesNames( pLocalPlayer );
 }

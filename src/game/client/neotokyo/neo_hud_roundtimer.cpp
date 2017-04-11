@@ -116,7 +116,7 @@ void CNHudRoundTimer::Paint()
 void CNHudRoundTimer::DrawNumber( HFont hFont, int x, int y, int number )
 {
 	wchar_t buffer[ 10 ];
-	V_snwprintf( buffer, sizeof( buffer ), L"%d", number );
+	V_snwprintf( buffer, ARRAYSIZE( buffer ), L"%d", number );
 
 	int charWidth = surface()->GetCharacterWidth( hFont, 48 );
 
@@ -141,7 +141,7 @@ void CNHudRoundTimer::DrawNumber( HFont hFont, int x, int y, int number )
 void CNHudRoundTimer::DrawTime( HFont hFont, int x, int y, int iMinutes, int iSeconds )
 {
 	wchar_t buffer[ 16 ];
-	V_snwprintf( buffer, sizeof( buffer ), L"%d:%.2d", iMinutes, iSeconds );
+	V_snwprintf( buffer, ARRAYSIZE( buffer ), L"%d:%.2d", iMinutes, iSeconds );
 
 	surface()->DrawSetTextPos( x, y );
 	surface()->DrawSetTextFont( hFont );

@@ -388,7 +388,7 @@ const QAngle& C_NEOPlayer::GetRenderAngles()
 
 int C_NEOPlayer::DrawModel( int flags )
 {
-	C_NEOPlayer* localPlayer = C_NEOPlayer::GetLocalNEOPlayer();
+	/*C_NEOPlayer* localPlayer = C_NEOPlayer::GetLocalNEOPlayer();
 
 	int result = -1;
 
@@ -522,7 +522,7 @@ int C_NEOPlayer::DrawModel( int flags )
 
 		if ( result >= 0 )
 			return result;
-	}
+	}*/
 
 	return BaseClass::DrawModel( flags );
 }
@@ -889,6 +889,11 @@ void C_NEOPlayer::GetEyeVectors( Vector *forward, Vector *right, Vector *up )
 CWeaponNEOBase* C_NEOPlayer::GetActiveNEOWeapon() const
 {
 	return dynamic_cast< CWeaponNEOBase* >( GetActiveWeapon() );
+}
+
+bool C_NEOPlayer::HasGhost()
+{
+	return Weapon_OwnsThisType( "weapon_ghost" ) != nullptr;
 }
 
 // !!!

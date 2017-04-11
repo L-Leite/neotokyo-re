@@ -121,10 +121,17 @@ void CNHudRangeFinder::OnThink()
 				trace_t ptr;
 				UTIL_TraceLine( vecEyePos, vecEyePos + vecForward * 36000.0f, CONTENTS_HITBOX | CONTENTS_DEBRIS | CONTENTS_MONSTER | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_SOLID, pLocalPlayer, COLLISION_GROUP_NONE, &ptr );
 
-				if ( ptr.surface.flags == SURF_SKY )
+				Vector vStart = ptr.startpos;
+				Vector vEnd = ptr.endpos;
+				vStart *= METERS_PER_INCH;
+				vEnd *= METERS_PER_INCH;
+
+				float fDistance = vEnd.Length() - vStart.Length();
+
+				if ( ptr.surface.flags & SURF_SKY )
 					m_fDistance = 1000.0f;
 				else
-					m_fDistance = (ptr.endpos - ptr.startpos).Length() / 12.0f / 3.0f * 0.914; // Must be some convertion macro somewhere 
+					m_fDistance = fDistance;
 			}
 			else
 			{
@@ -149,25 +156,22 @@ void CNHudRangeFinder::Paint()
 
 	surface()->DrawSetTextFont( m_hNumberFont );
 	surface()->DrawSetTextColor( 255, 255, 255, 100 );
-	surface()->DrawSetTextPos( m_flDigit_XPos, m_flDigit_YPos );
+	surface()->DrawSetTextPos( m_flText_XPos, m_flText_YPos );
 
-	int textLength = V_wcslen( m_szRangeString );
-
-	for ( int i = 0; i < textLength; i++ )
-		surface()->DrawUnicodeChar( m_szRangeString[ i ] );
+	surface()->DrawPrintText( m_szRangeString, V_wcslen( m_szRangeString ) );
 
 	surface()->DrawSetTextColor( 255, 255, 255, 100 );
-	DrawNumber( m_hNumberFont, m_flDigit2_XPos, m_flDigit2_YPos, m_fDistance );
+	DrawNumber( m_hNumberFont, m_flDigit_XPos, m_flDigit_YPos, m_fDistance );
 }
 
 void CNHudRangeFinder::DrawNumber( HFont hFont, int x, int y, int number )
 {
 	wchar_t buffer[ 24 ];
 
-	if ( number < 999.0f )
-		V_snwprintf( buffer, sizeof( buffer ), L"%d", number );
+	if ( number < 999 )
+		V_snwprintf( buffer, ARRAYSIZE( buffer ), L"%d", number );
 	else
-		V_snwprintf( buffer, sizeof( buffer ), L"000m" );
+		V_snwprintf( buffer, ARRAYSIZE( buffer ), L"000m" );
 
 	int charWidth = surface()->GetCharacterWidth( hFont, 48 );
 
@@ -183,8 +187,5 @@ void CNHudRangeFinder::DrawNumber( HFont hFont, int x, int y, int number )
 	surface()->DrawSetTextPos( x - textWide, y );		  
 	surface()->DrawSetTextFont( hFont );
 
-	int bufLen = V_wcslen( buffer );
-
-	for ( int i = 0; i < bufLen; i++ )
-		surface()->DrawUnicodeChar( buffer[ i ] );
+	surface()->DrawPrintText( buffer, V_wcslen( buffer ) );
 }

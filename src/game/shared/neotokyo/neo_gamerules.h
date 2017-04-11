@@ -120,18 +120,24 @@ private:
 #endif																			  
 	virtual bool	IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );		
 
-//private:
 public:
 	void			AddControlPoint( CNeoControlPoint* pPoint );
+	CNeoControlPoint* GetControlPoint( int index );
+	int				GetNumControlPoints();
 
 	bool			IsInFreezePeriod();
 
+#ifdef GAME_DLL
+	inline void		SetUnknown624( bool newValue ) { m_Unknown624 = newValue; }
+#endif
+
+private:
+#ifdef GAME_DLL
 	bool			m_bDeterminedGameType;
 	bool			m_bShouldChangeMap;
 
 	float			m_fLastRoundStartTime;
 
-#ifdef GAME_DLL
 	CUtlVector< CNEOSpawnPoint* > m_AttackerSpawnPoints;
 	CUtlVector< CNEOSpawnPoint* > m_DefenderSpawnPoints;
 
@@ -141,14 +147,16 @@ public:
 	CUtlVector< CNeoGhostSpawnPoint* > m_GhostSpawnPoints;
 
 	int m_iLastGhostSpawnPointIndex;
-#endif
 
 	float m_Unknown612;
 	float m_Unknown616;
 	int m_Unknown620;
 	bool m_Unknown624;
+#endif
+
 	CUtlVector< CNeoControlPoint* > m_ControlPoints;
-	float m_Unknown648;
+
+	float m_Unknown648; // prob not in client
 
 public:
 	CNetworkVar( NEOGameType, m_iGameType );

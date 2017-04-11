@@ -43,6 +43,46 @@ int GetNumberOfGhostRetrievalPoints()
 	return g_GhostRetrievalPoints.Size();
 }
 
+#ifdef CLIENT_DLL
+CON_COMMAND_F( cl_listghostretrievalpoints, "List ghost retrieval points.", FCVAR_CHEAT )
+{
+	DevMsg( "Client list of ghost retrieval points:\n" );
+
+	if ( g_GhostRetrievalPoints.IsEmpty() )
+	{
+		Warning( "\tNo ghost retrieval points found.\n" );
+		return;
+	}
+
+	for ( int i = 0; i < g_GhostRetrievalPoints.Size(); i++ )
+	{
+		CNeoGhostRetrievalPoint* pRetrievalPoint = g_GhostRetrievalPoints[ i ];
+		Vector vOrigin = pRetrievalPoint->GetAbsOrigin();
+		DevMsg( "\tRetrieval point %i: pos %f %f %f\n", i, vOrigin.x, vOrigin.y, vOrigin.z );
+	}
+}
+#elif GAME_DLL
+CON_COMMAND_F( sv_listghostretrievalpoints, "List ghost retrieval points.", FCVAR_CHEAT )
+{
+	DevMsg( "Server list of ghost retrieval points:\n" );
+
+	if ( g_GhostRetrievalPoints.IsEmpty() )
+	{
+		Warning( "\tNo ghost retrieval points found.\n" );
+		return;
+	}
+
+	for ( int i = 0; i < g_GhostRetrievalPoints.Size(); i++ )
+	{
+		CNeoGhostRetrievalPoint* pRetrievalPoint = g_GhostRetrievalPoints[ i ];
+		Vector vOrigin = pRetrievalPoint->GetAbsOrigin();
+		DevMsg( "\tRetrieval point %i: pos %f %f %f\n", i, vOrigin.x, vOrigin.y, vOrigin.z );
+	}
+}
+#endif
+
+
+
 CNeoGhostRetrievalPoint::CNeoGhostRetrievalPoint()
 {
 	g_GhostRetrievalPoints.AddToTail( this );

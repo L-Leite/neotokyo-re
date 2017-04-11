@@ -38,6 +38,8 @@ public:
 
 	//virtual void EjectBrass();
 
+	bool NEOBaseGunFire( float flCycleTime );
+
 private:
 	bool		m_bShouldReload;
 

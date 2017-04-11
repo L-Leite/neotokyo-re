@@ -7,7 +7,7 @@
 #include "cbase.h"
 #include "neo_hud_chat.h"
 //#include "c_sdk_player.h"
-//#include "c_sdk_playerresource.h"
+#include "c_playerresource.h"
 #include "hud_macros.h"
 #include "text_message.h"
 #include "vguicenterprint.h"
@@ -19,6 +19,8 @@ DECLARE_HUDELEMENT( CHudChat );
 DECLARE_HUD_MESSAGE( CHudChat, SayText );
 DECLARE_HUD_MESSAGE( CHudChat, TextMsg );
 
+
+#define NEO_CHATLINE_FADE_TIME 4.0f
 
 //=====================
 //CHudChatLine
@@ -46,9 +48,9 @@ void CHudChatLine::PerformFadeout( void )
 	int lb = m_clrText[2];
 	
 	//CSPort chat only fades out, no blinking.
-	if ( curtime <= m_flExpireTime && curtime > m_flExpireTime - CHATLINE_FADE_TIME )
+	if ( curtime <= m_flExpireTime && curtime > m_flExpireTime - NEO_CHATLINE_FADE_TIME )
 	{
-		float frac = ( m_flExpireTime - curtime ) / CHATLINE_FADE_TIME;
+		float frac = ( m_flExpireTime - curtime ) / NEO_CHATLINE_FADE_TIME;
 
 		int alpha = frac * 255;
 		alpha = clamp( alpha, 0, 255 );
@@ -124,16 +126,16 @@ void CHudChat::CreateChatInputLine( void )
 
 void CHudChat::CreateChatLines( void )
 {
+#ifndef _XBOX
 	m_ChatLine = new CHudChatLine( this, "ChatLine1" );
 	m_ChatLine->SetVisible( false );
+
+#endif
 }
 
 void CHudChat::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-
-	SetBgColor( Color( 0, 0, 0, 0 ) );
-	SetFgColor( Color( 0, 0, 0, 0 ) );
 }
 
 
@@ -405,4 +407,23 @@ int CHudChat::GetChatInputOffset( void )
 	}
 	else
 		return 0;
+}
+
+Color CHudChat::GetClientColor( int clientIndex )
+{
+	if ( clientIndex == 0 ) // console msg
+	{
+		return g_ColorGreen;
+	}
+	else if ( g_PR )
+	{
+		switch ( g_PR->GetTeam( clientIndex ) )
+		{
+			case 2: return g_ColorGreen;
+			case 3: return g_ColorBlue;
+			default: return g_ColorGrey;
+		}
+	}
+
+	return g_ColorYellow;
 }

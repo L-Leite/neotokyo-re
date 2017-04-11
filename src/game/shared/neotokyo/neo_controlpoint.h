@@ -35,6 +35,11 @@ public:
 
 	bool UpdatePointOwner();
 
+	string_t GetName();
+	Vector	GetPosition();
+	int		GetIcon();
+	int		GetOwner();
+
 protected:
 	CNetworkVar( string_t, m_Name );
 	CNetworkVar( int, m_ID );
@@ -44,6 +49,26 @@ protected:
 	CNetworkVar( int, m_Owner );
 	CNetworkVar( int, m_Radius );
 };	
+
+inline string_t CNeoControlPoint::GetName()
+{
+	return m_Name;
+}
+
+inline Vector CNeoControlPoint::GetPosition()
+{
+	return m_Position;
+}
+
+inline int CNeoControlPoint::GetIcon()
+{
+	return m_Icon;
+}
+
+inline int CNeoControlPoint::GetOwner()
+{
+	return m_Owner;
+}
 				
 
 

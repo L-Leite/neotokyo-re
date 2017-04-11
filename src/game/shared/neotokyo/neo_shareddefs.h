@@ -69,7 +69,7 @@ enum NEOGameType
 {
 	GAMETYPE_TDM = 0,
 	GAMETYPE_CTG,
-	GAMETYPE_VIP,
+	GAMETYPE_VIP, // Or control point???
 	GAMETYPE_MAXCOUNT
 };
 

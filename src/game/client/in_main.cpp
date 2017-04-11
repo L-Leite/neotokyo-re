@@ -148,6 +148,7 @@ static	kbutton_t	in_sprint;
 static	kbutton_t	in_thermoptic;
 static	kbutton_t	in_vision;
 static	kbutton_t	in_toss;
+static	kbutton_t	in_melee;
 #else
 static  kbutton_t   in_grenade1;
 static  kbutton_t   in_grenade2;
@@ -508,6 +509,8 @@ void IN_VisionUp( const CCommand &args ) { KeyUp( &in_vision, args[1] ); }
 void IN_VisionDown( const CCommand &args ) { KeyDown( &in_vision, args[1] ); }
 void IN_TossUp( const CCommand &args ) { KeyUp( &in_toss, args[1] ); }
 void IN_TossDown( const CCommand &args ) { KeyDown( &in_toss, args[1] ); }
+void IN_MeleeUp( const CCommand &args ) { KeyUp( &in_melee, args[ 1 ] ); }
+void IN_MeleeDown( const CCommand &args ) { KeyDown( &in_melee, args[ 1 ] ); }
 #else
 void IN_Grenade1Up( const CCommand &args ) { KeyUp( &in_grenade1, args[1] ); }
 void IN_Grenade1Down( const CCommand &args ) { KeyDown( &in_grenade1, args[1] ); }
@@ -1501,6 +1504,7 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_THERMOPTIC, s_ClearInputState, &in_thermoptic, bResetState );
 	CalcButtonBits( bits, IN_VISION, s_ClearInputState, &in_vision, bResetState );
 	CalcButtonBits( bits, IN_TOSS, s_ClearInputState, &in_toss, bResetState );
+	CalcButtonBits( bits, IN_MELEE, s_ClearInputState, &in_melee, bResetState );
 #else
 	CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
 	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
@@ -1672,6 +1676,8 @@ static ConCommand startvision( "+vision", IN_VisionDown );
 static ConCommand endvision( "-vision", IN_VisionUp );
 static ConCommand starttoss( "+toss", IN_TossDown );
 static ConCommand endtoss( "-toss", IN_TossUp );
+static ConCommand startmelee( "+melee", IN_MeleeDown );
+static ConCommand endmelee( "-melee", IN_MeleeUp );
 #else
 static ConCommand endgrenade1( "-grenade1", IN_Grenade1Up );
 static ConCommand startgrenade1( "+grenade1", IN_Grenade1Down );

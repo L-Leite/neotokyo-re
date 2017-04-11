@@ -1540,8 +1540,20 @@ const CViewVectors* CNEOGameRules::GetViewVectors() const
 void CNEOGameRules::AddControlPoint( CNeoControlPoint* pPoint )
 {
 	m_ControlPoints.AddToTail( pPoint );
+}											 
+
+CNeoControlPoint* CNEOGameRules::GetControlPoint( int index )
+{			   
+	if ( index >= m_ControlPoints.Size() )
+		return nullptr;
+
+	return m_ControlPoints[ index ];
 }
 
+int CNEOGameRules::GetNumControlPoints()
+{
+	return m_ControlPoints.Size();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Init CS ammo definitions

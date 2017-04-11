@@ -15,7 +15,7 @@ class CNeoFrame : public Frame
 	DECLARE_CLASS_SIMPLE( CNeoFrame, Frame );
 
 public:
-	CNeoFrame( const char *panelName );
+	CNeoFrame( Panel* parent, const char *panelName );
 	virtual ~CNeoFrame();
 
 	virtual bool IsVisible();
@@ -26,9 +26,9 @@ public:
 	virtual Panel *CreateControlByName( const char *controlName );
 
 private:
-	int m_iTextureID1;
-	int m_iTextureID2;
-	int m_iTextureID3;
+	int m_iCornerTextureId;
+	int m_iTitleBarTextureId;
+	int m_iBodyTextureId;
 };
 
 }

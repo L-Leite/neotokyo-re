@@ -63,6 +63,8 @@ public:
 	void			ChatPrintf( int iPlayerIndex, PRINTF_FORMAT_STRING const char *fmt, ... );
 
 	int				GetChatInputOffset( void );
+
+	virtual Color	GetClientColor( int clientIndex );
 };
 
 #endif	//NEO_HUD_CHAT_H

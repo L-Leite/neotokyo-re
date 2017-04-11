@@ -29,7 +29,7 @@ public:
 	void SetTexture( const char* textureName );
 
 private:
-	int m_iTextureID;
+	int m_iImageTextureId;
 	bool m_bUnknown;
 };
 

@@ -233,7 +233,7 @@ void CNEOPlayer::FireBullet(
 						   )
 {
 	float fCurrentDamage = iDamage;   // damage of the bullet at it's current trajectory
-	float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
+	float fCurrentPenetration = fPenetration;
 
 	Vector vecDirShooting, vecRight, vecUp;
 	AngleVectors( shootAngles, &vecDirShooting, &vecRight, &vecUp );
@@ -250,22 +250,36 @@ void CNEOPlayer::FireBullet(
 
 	float flMaxRange = 8000;	  	
 
-	int	iCurrentPenetration = 0;
-	while ( iCurrentPenetration <= MAX_PENETRATE_WALLS )
-	{
-		Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
+	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
 
+#ifdef CLIENT_DLL
+	if ( bDoEffects ) // It doesn't use this idk
+	{
+		trace_t tr;
+
+		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+
+		if ( tr.fraction == 1.0f )
+		{ 
+			UTIL_TraceLine( vecEnd, vecEnd + vecSrc, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+			UTIL_Tracer( vecEnd, tr.endpos, pevAttacker->entindex(), -1, 6500.0f, true );
+		}
+	}
+#endif
+
+	int	iCurrentPenetration = 0;
+
+	while ( iCurrentPenetration <= MAX_PENETRATE_WALLS )
+	{						
 		trace_t tr; // main enter bullet trace
 
 		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
-
-		if ( tr.fraction == 1.0f )
-			return; // we didn't hit anything, stop tracing shoot
-
+		   
 		/************* MATERIAL DETECTION ***********/
 		surfacedata_t* pSurfaceData = physprops->GetSurfaceData( tr.surface.surfaceProps );
 		int iEnterMaterial = pSurfaceData->game.material;
 
+		float fDistancePenetrated = 0.0f;
 		float flPenetrationModifier = 1.0f;
 
 		GetMaterialParameters( iEnterMaterial, flPenetrationModifier );					
@@ -334,16 +348,57 @@ void CNEOPlayer::FireBullet(
 			}
 		} // bDoEffects
 
-		float flPenetrationDistance = fPenetration * flPenetrationModifier;
+		if ( tr.fraction == 1.0f )
+			return; // we didn't hit anything, stop tracing shoot
+
+		bool bHitWall = true;
+
+		float flPenetrationDistance = fCurrentPenetration * flPenetrationModifier;
 
 		if ( flPenetrationDistance > MAX_PENETRATION_DISTANCE )
 			flPenetrationDistance = MAX_PENETRATION_DISTANCE;
 
-		//calculate the damage based on the distance the bullet travelled.
-		flCurrentDistance += tr.fraction * flPenetrationDistance;
+		trace_t tr2;
+
+		UTIL_TraceLine( tr.endpos + vecDir, tr.endpos, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr2 );
+
+		if ( tr2.fraction != 1.0f )
+		{	
+			float fDistance = (tr2.endpos - tr.endpos).Length();
+
+			surfacedata_t* pSurfaceData = physprops->GetSurfaceData( tr2.surface.surfaceProps );
+			int iEnterMaterial = pSurfaceData->game.material;
+
+			fDistancePenetrated = fDistance * (1.0f / flPenetrationModifier);
+
+			if ( bDoEffects )
+			{ 
+				UTIL_ImpactTrace( &tr2, iDamageType );
+
+				if ( iEnterMaterial == CHAR_TEX_FLESH )
+				{ 	
+					UTIL_BloodDrips( tr2.endpos, vecDir, 247, iDamage );
+
+					UTIL_TraceLine( tr2.endpos, tr2.endpos + vecDir * iDamage * 4.0f, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW, this, COLLISION_GROUP_NONE, &tr2 );
+											 
+					if ( tr2.fraction != 1.0f )
+						UTIL_BloodDecalTrace( &tr2, 247 );
+				}
+			}
+		}
+		else
+		{
+			bHitWall = false;
+		}
+
+		if ( fCurrentPenetration < 0 )
+			fCurrentPenetration = 0;
 
 		// damage get weaker of distance
-		fCurrentDamage *= pow ( 0.85f, (flCurrentDistance / 500));		   		
+		fCurrentDamage *= fCurrentPenetration / fPenetration;
+
+		if ( fCurrentDamage < iDamage * 0.25f )
+			fCurrentDamage = iDamage;
 
 		// add damage to entity that we hit
 
@@ -359,31 +414,22 @@ void CNEOPlayer::FireBullet(
 		ApplyMultiDamage();
 #endif
 
-		// find exact penetration exit
-		Vector penetrationEnd = tr.endpos + flPenetrationDistance * vecDir;
-
-		trace_t exitTr;
-		UTIL_TraceLine( penetrationEnd, tr.endpos, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, NULL, &exitTr );
-
-		if ( exitTr.m_pEnt != tr.m_pEnt && exitTr.m_pEnt != NULL )
-		{
-			// something was blocking, trace again
-			UTIL_TraceLine( penetrationEnd, tr.endpos, MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_HITBOX, exitTr.m_pEnt, COLLISION_GROUP_NONE, &exitTr );
-		}
-
-		float flTraceDistance = VectorLength( exitTr.endpos - tr.endpos );
-
-		// check if bullet has enough power to penetrate this distance for this material
-		if ( flTraceDistance > (fPenetration * flPenetrationModifier) )
-			break; // bullet hasn't enough power to penetrate this distance
-
 		if ( bDoEffects )
 		{
-			UTIL_ImpactTrace( &exitTr, iDamageType );
+			UTIL_ImpactTrace( &tr, iDamageType );
 		}
 
-		vecSrc = exitTr.endpos;
+		fCurrentPenetration -= fDistancePenetrated;
+
+		if ( fCurrentPenetration <= 0 )
+			break;
+
+		if ( tr.m_pEnt->IsPlayer() || bHitWall )
+			break;
 
 		iCurrentPenetration++;
+
+		vecSrc = tr2.endpos;
+		vecEnd = tr2.endpos + vecDir * flMaxRange;		
 	}
 }

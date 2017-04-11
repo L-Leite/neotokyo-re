@@ -9,7 +9,7 @@
 #include <vgui_controls\Label.h>
 
 
-CNeoTeamMenu::CNeoTeamMenu( IViewPort *pViewPort ) : CNeoFrame( PANEL_TEAM )
+CNeoTeamMenu::CNeoTeamMenu( IViewPort *pViewPort ) : CNeoFrame( nullptr, PANEL_TEAM )
 {
 	m_pViewPort = pViewPort;
 
@@ -33,11 +33,16 @@ void CNeoTeamMenu::ApplySchemeSettings( vgui::IScheme* pScheme )
 
 void CNeoTeamMenu::OnCommand( const char* command )
 {
-	if ( V_stricmp( command, "vguicancel" ) && V_stricmp( command, "Close" ) )
+	if ( !V_stricmp( command, "vguicancel" ) || !V_stricmp( command, "Close" ) )
+	{
+		Close();
+		gViewPortInterface->ShowBackGround( false );   
+	}
+	else
+	{
 		engine->ClientCmd( command );
+	}
 
-	Close();
-	gViewPortInterface->ShowBackGround( false );
 	
 	BaseClass::OnCommand( command );
 }
@@ -69,7 +74,7 @@ void CNeoTeamMenu::Update()
 		{
 			g_pVGuiLocalize->ConvertANSIToUnicode( "PLAYERS: ", buffer, sizeof( buffer ) );
 
-			V_snwprintf( buffer2, sizeof( buffer2 ), L"%i", jinraiTeam->GetNumPlayers() );
+			V_snwprintf( buffer2, ARRAYSIZE( buffer2 ), L"%i", jinraiTeam->GetNumPlayers() );
 
 			V_wcscat( buffer, buffer2, sizeof( buffer ) );
 		}
@@ -83,7 +88,7 @@ void CNeoTeamMenu::Update()
 		{
 			g_pVGuiLocalize->ConvertANSIToUnicode( "SCORE: ", buffer, sizeof( buffer ) );
 
-			V_snwprintf( buffer2, sizeof( buffer2 ), L"%i", jinraiTeam->Get_Score() );
+			V_snwprintf( buffer2, ARRAYSIZE( buffer2 ), L"%i", jinraiTeam->Get_Score() );
 
 			V_wcscat( buffer, buffer2, sizeof( buffer ) );
 		}
@@ -103,7 +108,7 @@ void CNeoTeamMenu::Update()
 		{
 			g_pVGuiLocalize->ConvertANSIToUnicode( "PLAYERS: ", buffer, sizeof( buffer ) );
 
-			V_snwprintf( buffer2, sizeof( buffer2 ), L"%i", nsfTeam->GetNumPlayers() );
+			V_snwprintf( buffer2, ARRAYSIZE( buffer2 ), L"%i", nsfTeam->GetNumPlayers() );
 
 			V_wcscat( buffer, buffer2, sizeof( buffer ) );
 		}
@@ -117,7 +122,7 @@ void CNeoTeamMenu::Update()
 		{
 			g_pVGuiLocalize->ConvertANSIToUnicode( "SCORE: ", buffer, sizeof( buffer ) );
 
-			V_snwprintf( buffer2, sizeof( buffer2 ), L"%i", nsfTeam->Get_Score() );
+			V_snwprintf( buffer2, ARRAYSIZE( buffer2 ), L"%i", nsfTeam->Get_Score() );
 
 			V_wcscat( buffer, buffer2, sizeof( buffer ) );
 		} 

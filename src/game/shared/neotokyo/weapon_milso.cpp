@@ -57,12 +57,8 @@ CWeaponMilso::CWeaponMilso()
 
 bool CWeaponMilso::Deploy()
 {
-	m_fAccuracy = 0.9f;
-
-	CNEOPlayer* pOwner = GetPlayerOwner();
-
-	if ( pOwner->m_iShotsFired > 0 )
-		pOwner->m_iShotsFired = 0;
+	m_fAccuracy = 0.9f;	 
+	GetPlayerOwner()->m_iShotsFired = 0;		
 
 	return BaseClass::Deploy();	
 }
@@ -91,79 +87,10 @@ bool CWeaponMilso::Reload()
 }
 
 void CWeaponMilso::PrimaryAttack()
-{
-	if ( m_flNextPrimaryAttack > gpGlobals->curtime
-		|| m_flNextSecondaryAttack > gpGlobals->curtime )
-		return;
-
+{			
 	const CNEOWeaponInfo& pWeaponInfo = GetNEOWpnData();
-	CNEOPlayer* pPlayer = GetPlayerOwner();
 
-	if ( !pPlayer || pPlayer->m_iSprint || pPlayer->IsOnLadder() )
-		return;
-
-	float flCycleTime = pWeaponInfo.m_flCycleTime;	
-	float fAccuracy = m_fAccuracy;
-
-	if ( bAimed )
-		fAccuracy = fAccuracy * 0.26f + 0.35f;		
-
-	pPlayer->m_iShotsFired++;
-
-	if ( m_iFireMode == 0 && pPlayer->m_iShotsFired > 1 )
-		return;
-
-	// Out of ammo?
-	if ( m_iClip1 <= 0 )
-	{
-		NEOPlayEmptySound();
-	}
-
-#ifdef GAME_DLL
-	pPlayer->BodyPartHit( HITGROUP_GENERIC );
-#endif
-
-	int actPrimAttack = m_iClip1 <= 0 ? ACT_VM_DRYFIRE : ACT_VM_PRIMARYATTACK;
-
-	SendWeaponAnim( actPrimAttack );
-
-#ifndef CLIENT_DLL
-	pPlayer->CheatImpulseCommands( 5 );
-#endif
-													 
-	m_iClip1--;
-
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
-
-	FX_FireBullets(
-		pPlayer->entindex(),
-		pPlayer->Weapon_ShootPosition(),
-		pPlayer->EyeAngles() + pPlayer->GetPunchAngle(),
-		GetWeaponID(),
-		Primary_Mode,
-		CBaseEntity::GetPredictionRandomSeed() & 255,
-		m_fAccuracy );
-
-	m_fAccuracy = 0.8f;
-
-	if ( m_fOldAccuracy < m_fAccuracy )
-		m_fAccuracy = m_fOldAccuracy;
-
-	if ( pPlayer )
-		pPlayer->FixViewPunch( 0.0f );
-
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flCycleTime;
-
-	SetWeaponIdleTime( gpGlobals->curtime + 2.0 );
-
-	AddViewKick();
-
-	pPlayer->DoMuzzleFlash();
-
-#ifdef CLIENT_DLL
-	DoNEOMuzzleFlash();
-#endif								  	
+	NEOBaseGunFire( pWeaponInfo.m_flCycleTime );
 }
 
 void CWeaponMilso::AddViewKick( void )

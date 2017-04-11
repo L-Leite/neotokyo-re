@@ -42,16 +42,51 @@ CWeaponGhost* GetGhost( int iIndex )
 
 CWeaponGhost* GetGhost()
 {
-	if ( GetNumberOfGhosts <= 0 )
-		return nullptr;
-
-	return g_Ghosts[ 0 ];
+	return GetGhost( 0 );
 }
 
 int GetNumberOfGhosts()
 {
 	return g_Ghosts.Size();
 }
+
+#ifdef CLIENT_DLL
+CON_COMMAND_F( cl_listghosts, "List ghosts.", FCVAR_CHEAT )
+{
+	DevMsg( "Client list of ghosts:\n" );
+
+	if ( g_Ghosts.IsEmpty() )
+	{
+		Warning( "\tNo ghosts found.\n" );
+		return;
+	}
+
+	for ( int i = 0; i < g_Ghosts.Size(); i++ )
+	{
+		CWeaponGhost* pGhost = g_Ghosts[ i ];
+		Vector vOrigin = pGhost->GetAbsOrigin();
+		DevMsg( "\tGhost %i: pos %f %f %f\n", i, vOrigin.x, vOrigin.y, vOrigin.z );
+	}
+}
+#elif GAME_DLL
+CON_COMMAND_F( sv_listghosts, "List ghosts.", FCVAR_CHEAT )
+{
+	DevMsg( "Server list of ghosts:\n" );
+
+	if ( g_Ghosts.IsEmpty() )
+	{
+		Warning( "\tNo ghosts found.\n" );
+		return;
+	}
+
+	for ( int i = 0; i < g_Ghosts.Size(); i++ )
+	{
+		CWeaponGhost* pGhost = g_Ghosts[ i ];
+		Vector vOrigin = pGhost->GetAbsOrigin();
+		DevMsg( "\tGhost %i: pos %f %f %f\n", i, vOrigin.x, vOrigin.y, vOrigin.z );
+	}
+}
+#endif
 
 CWeaponGhost::CWeaponGhost()
 {

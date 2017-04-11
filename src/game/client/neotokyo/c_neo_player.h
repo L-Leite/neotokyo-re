@@ -60,6 +60,8 @@ public:
 
 	virtual void GetEyeVectors( Vector *forward, Vector *right, Vector *up );
 
+	bool HasGhost();
+
 	bool CanSpeedBoost() { return m_fSprintNRG > NEO_MIN_SPEEDBOOST_AMOUNT; }
 
 private:

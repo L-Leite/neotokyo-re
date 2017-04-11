@@ -48,7 +48,11 @@ int CNeoControlPoint::UpdateTransmitState()
 
 void CNeoControlPoint::Activate()
 {
+#ifdef CLIENT_DLL
+	DevMsg( "Client CP %s Activated\n", m_Name );
+#else
 	DevMsg( "Server CP %s Activated\n", m_Name );
+#endif
 
 #ifdef GAME_DLL
 	m_Position = GetAbsOrigin();

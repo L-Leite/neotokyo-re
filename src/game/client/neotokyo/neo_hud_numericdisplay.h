@@ -20,7 +20,7 @@ protected:
 
 	virtual void DrawNumber( vgui::HFont hFont, int x, int y, int number );
 
-private:																			 
+protected:																			 
 	CPanelAnimationVar( float, m_flBlur, "Blur", "0" );	
 
 	CPanelAnimationVar( Color, m_TextColor, "TextColor", "FgColor" );

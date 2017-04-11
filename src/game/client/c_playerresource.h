@@ -76,9 +76,9 @@ protected:
 	int		m_iHealth[MAX_PLAYERS+1];
 	Color	m_Colors[MAX_TEAMS];
 #ifdef NEO_DLL
-	int		m_iClassType[ MAX_PLAYERS+1];
-	int		m_iStar[ MAX_PLAYERS+1];
-	int		m_iRank[ MAX_PLAYERS+1];
+	int		m_iClassType[MAX_PLAYERS+1];
+	int		m_iStar[MAX_PLAYERS+1];
+	int		m_iRank[MAX_PLAYERS+1];
 #endif
 	string_t m_szUnconnectedName;
 

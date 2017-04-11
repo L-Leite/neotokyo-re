@@ -42,6 +42,7 @@ public:
 	virtual bool IsRemoveable() { return false; }
 	virtual bool ShouldStayOnRoundRestart() { return true; }
 	virtual bool CanAim() { return false; }
+	virtual bool HasAmmoClip() { return false; }
 
 	virtual NEOWeaponID GetWeaponID( void ) const { return WEAPON_GHOST; }
 

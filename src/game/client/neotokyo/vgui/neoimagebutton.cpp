@@ -9,7 +9,7 @@ CNImageButton::CNImageButton( Panel *parent, const char *panelName, const char *
 {
 	SetPaintBackgroundEnabled( false );
 
-	m_iTextureID = 0;
+	m_iImageTextureId = 0;
 	m_bUnknown = false;
 }
 
@@ -19,12 +19,12 @@ CNImageButton::~CNImageButton()
 
 void CNImageButton::ApplySettings( KeyValues *inResourceData )
 {
-	const char* image = inResourceData->GetString( "image", "" );
+	const char* image = inResourceData->GetString( "image" );
 
 	if ( image )
 	{
-		m_iTextureID = surface()->CreateNewTextureID();
-		surface()->DrawSetTextureFile( m_iTextureID, image, true, false );
+		m_iImageTextureId = surface()->CreateNewTextureID();
+		surface()->DrawSetTextureFile( m_iImageTextureId, image, true, false );
 	}
 
 	BaseClass::ApplySettings( inResourceData );
@@ -48,7 +48,7 @@ void CNImageButton::Paint()
 	surface()->DrawFilledRect( 0, 0, wide, tall );
 
 	surface()->DrawSetColor( 255, 255, 255, 255 );
-	surface()->DrawSetTexture( m_iTextureID );
+	surface()->DrawSetTexture( m_iImageTextureId );
 	surface()->DrawTexturedRect( 0, 0, wide, tall );
 
 	if ( IsArmed() && !IsDepressed() )
@@ -60,8 +60,6 @@ void CNImageButton::Paint()
 		surface()->DrawSetColor( 155, 155, 155, 255 );
 		surface()->DrawOutlinedRect( 2, 2, wide - 2, tall - 2 );
 	}
-
-	BaseClass::Paint();
 }
 
 void CNImageButton::PaintBorder()
@@ -74,8 +72,8 @@ void CNImageButton::DrawFocusBorder( int tx0, int ty0, int tx1, int ty1 )
 
 void CNImageButton::SetTexture( const char* textureName )
 {
-	m_iTextureID = surface()->CreateNewTextureID();
-	surface()->DrawSetTextureFile( m_iTextureID, textureName, true, false );
+	m_iImageTextureId = surface()->CreateNewTextureID();
+	surface()->DrawSetTextureFile( m_iImageTextureId, textureName, true, false );
 }
 
 }

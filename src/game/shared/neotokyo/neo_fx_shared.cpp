@@ -168,7 +168,7 @@ void FX_FireBullets(
 	bDoEffects = false; // no effects on server
 #endif
 
-	if ( iWeaponID == 26 )
+	if ( iWeaponID == WEAPON_KNIFE )
 		return;
 
 	iSeed++;
@@ -178,7 +178,7 @@ void FX_FireBullets(
 
 	WeaponSound_t sound_type = SINGLE;
 
-	if ( bDoEffects)
+	if ( bDoEffects )
 	{
 		FX_WeaponSound( iPlayerIndex, sound_type, vOrigin, pWeaponInfo );
 	}

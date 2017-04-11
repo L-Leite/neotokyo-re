@@ -16,11 +16,10 @@ class CNButton : public Button
 
 public:
 	CNButton( Panel *parent, const char *panelName, const char *text );
-	virtual ~CNButton();
 
-public:
-	virtual void OnMousePressed( MouseCode code );
+public:								
 	virtual void PaintBackground();
+	virtual void Paint();
 	virtual void PaintBorder();
 	virtual void DrawFocusBorder( int tx0, int ty0, int tx1, int ty1 );
 

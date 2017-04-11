@@ -108,12 +108,12 @@ void CNEOClientScoreBoardDialog::UpdateTeamInfo()
 			switch ( teamIndex )
 			{
 				case TEAM_JINRAI:
-					V_snwprintf( buffer, sizeof( buffer ), L"JINRAI          Score: %d     Players: %d", team->Get_Score(), team->Get_Number_Players() );
+					V_snwprintf( buffer, ARRAYSIZE( buffer ), L"JINRAI          Score: %d     Players: %d", team->Get_Score(), team->Get_Number_Players() );
 					m_pPlayerList->ModifyColumn( SCORESECTION_JINRAI, "name", buffer );
 					break;
 
 				case TEAM_NSF:
-					V_snwprintf( buffer, sizeof( buffer ), L"JNSF              Score: %d     Players: %d", team->Get_Score(), team->Get_Number_Players() );
+					V_snwprintf( buffer, ARRAYSIZE( buffer ), L"NSF              Score: %d     Players: %d", team->Get_Score(), team->Get_Number_Players() );
 					m_pPlayerList->ModifyColumn( SCORESECTION_NSF, "name", buffer );
 					break;
 

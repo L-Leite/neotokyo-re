@@ -27,17 +27,34 @@ CNButton::CNButton( Panel *parent, const char *panelName, const char *text ) : B
 	m_fUnknown = 0.f;
 }
 
-CNButton::~CNButton()
-{
-}
-
-void CNButton::OnMousePressed( MouseCode code )
-{
-	BaseClass::OnMousePressed( code );
-}
-
 void CNButton::PaintBackground()
 {
+}
+
+void CNButton::Paint()
+{
+	int wide, tall;
+	GetSize( wide, tall );
+
+	int iButtonTextureId = m_iButtonArmedId;
+
+	if ( IsArmed() )
+	{
+		if ( IsDepressed() )
+			iButtonTextureId = m_iButtonPressedId;
+		else
+			iButtonTextureId = m_iButtonMouseoverId;
+	}
+	else if ( !IsEnabled() )
+	{
+		iButtonTextureId = m_iButtonDisabledId;
+	}
+
+	surface()->DrawSetColor( 255, 255, 255, 255 );
+	surface()->DrawSetTexture( iButtonTextureId );
+	surface()->DrawTexturedRect( 0, 0, wide, tall );
+
+	BaseClass::Paint();
 }
 
 void CNButton::PaintBorder()
